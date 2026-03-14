@@ -9,9 +9,22 @@ import SwiftUI
 
 @main
 struct TallyApp: App {
+    @State private var showSplash = true // TODO: Display once per user.
+
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            if showSplash {
+                SplashView()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                showSplash = false
+                            }
+                        }
+                    }
+            } else {
+                HomeView()
+            }
         }
     }
 }
