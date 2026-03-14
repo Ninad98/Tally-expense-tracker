@@ -13,7 +13,12 @@ struct HomeView: View {
             Image(systemName: "globe")
                 .imageScale(.large)
                 .foregroundStyle(.tint)
-            Text("Hello, world!")
+            Text("Hello World System Font")
+            
+            Text("Hello World Custom from enum").font(
+                .manrope(.bold, size: 18)
+            )
+
         }
         .padding()
     }
