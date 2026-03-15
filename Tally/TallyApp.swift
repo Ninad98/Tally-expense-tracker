@@ -9,16 +9,18 @@ import SwiftUI
 
 @main
 struct TallyApp: App {
-    @State private var showSplash = true // TODO: Display once per user.
+    @AppStorage("splashShown") private var splashShown: Bool = false
+    @State private var splashDismissed: Bool = false
 
     var body: some Scene {
         WindowGroup {
-            if showSplash {
+            if !splashShown && !splashDismissed {
                 SplashView()
                     .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
                             withAnimation(.easeInOut(duration: 0.6)) {
-                                showSplash = false
+                                splashShown = true
+                                splashDismissed = true
                             }
                         }
                     }
