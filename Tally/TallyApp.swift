@@ -7,34 +7,83 @@
 
 import SwiftUI
 
+enum AppScreen {
+    case splash
+    case onboarding
+    case currencySelection(fromOnboarding: Bool)
+    case home
+}
+
 @main
 struct TallyApp: App {
     @AppStorage("splashShown") private var splashShown: Bool = false
     @AppStorage("onboardingCompleted") private var onboardingCompleted: Bool = false
-    @State private var splashDismissed: Bool = false
-    @State private var onboardingDismissed: Bool = false
+    @AppStorage("currencySelected") private var currencySelected: Bool = false
+
+    @State private var screen: AppScreen = .splash
+
+    init() {
+        let splash = UserDefaults.standard.bool(forKey: "splashShown")
+        let onboarding = UserDefaults.standard.bool(forKey: "onboardingCompleted")
+        let currency = UserDefaults.standard.bool(forKey: "currencySelected")
+
+        if !splash {
+            _screen = State(initialValue: .splash)
+        } else if !onboarding {
+            _screen = State(initialValue: .onboarding)
+        } else if !currency {
+            _screen = State(initialValue: .currencySelection(fromOnboarding: false))
+        } else {
+            _screen = State(initialValue: .home)
+        }
+    }
 
     var body: some Scene {
         WindowGroup {
-            if !splashShown && !splashDismissed {
-                SplashView()
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                            withAnimation(.easeInOut(duration: 0.6)) {
+            Group {
+                switch screen {
+                case .splash:
+                    SplashView()
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                                 splashShown = true
-                                splashDismissed = true
+                                withAnimation(.easeInOut(duration: 0.6)) {
+                                    screen = onboardingCompleted
+                                        ? (currencySelected ? .home : .currencySelection(fromOnboarding: false))
+                                        : .onboarding
+                                }
                             }
                         }
-                    }
-            } else if !onboardingCompleted && !onboardingDismissed {
-                OnboardingView {
-                    withAnimation(.easeInOut(duration: 0.6)) {
+
+                case .onboarding:
+                    OnboardingView {
                         onboardingCompleted = true
-                        onboardingDismissed = true
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            screen = .currencySelection(fromOnboarding: true)
+                        }
                     }
+
+                case .currencySelection(let fromOnboarding):
+                    CurrencySelectionView(
+                        onBack: fromOnboarding
+                            ? {
+                                withAnimation(.easeInOut(duration: 0.4)) {
+                                    screen = .onboarding
+                                }
+                            }
+                            : nil,
+                        onComplete: { currency in
+                            UserDefaults.standard.set(currency.id, forKey: "selectedCurrency")
+                            currencySelected = true
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                screen = .home
+                            }
+                        }
+                    )
+
+                case .home:
+                    HomeView()
                 }
-            } else {
-                HomeView()
             }
         }
     }
