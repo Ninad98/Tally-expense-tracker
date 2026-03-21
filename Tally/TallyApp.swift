@@ -11,6 +11,7 @@ enum AppScreen {
     case splash
     case onboarding
     case currencySelection(fromOnboarding: Bool)
+    case login
     case home
 }
 
@@ -34,7 +35,7 @@ struct TallyApp: App {
         } else if !currency {
             _screen = State(initialValue: .currencySelection(fromOnboarding: false))
         } else {
-            _screen = State(initialValue: .home)
+            _screen = State(initialValue: .login)
         }
     }
 
@@ -49,7 +50,7 @@ struct TallyApp: App {
                                 splashShown = true
                                 withAnimation(.easeInOut(duration: 0.6)) {
                                     screen = onboardingCompleted
-                                        ? (currencySelected ? .home : .currencySelection(fromOnboarding: false))
+                                        ? (currencySelected ? .login : .currencySelection(fromOnboarding: false))
                                         : .onboarding
                                 }
                             }
@@ -76,10 +77,17 @@ struct TallyApp: App {
                             UserDefaults.standard.set(currency.id, forKey: "selectedCurrency")
                             currencySelected = true
                             withAnimation(.easeInOut(duration: 0.6)) {
-                                screen = .home
+                                screen = .login
                             }
                         }
                     )
+
+                case .login:
+                    LoginView {
+                        withAnimation(.easeInOut(duration: 0.6)) {
+                            screen = .home
+                        }
+                    }
 
                 case .home:
                     HomeView()
