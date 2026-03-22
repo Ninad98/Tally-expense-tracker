@@ -10,6 +10,7 @@ import SwiftUI
 struct LoginView: View {
 
     let onLoginSuccess: () -> Void
+    let onSignUp: () -> Void
     @StateObject private var viewModel = LoginViewModel()
 
     var body: some View {
@@ -53,7 +54,7 @@ struct LoginView: View {
                                 .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
                                 .autocorrectionDisabled()
-                                .onChange(of: viewModel.email) { _ in
+                                .onChange(of: viewModel.email) { _, _ in
                                     if viewModel.emailError != nil { viewModel.validateEmail() }
                                 }
                             if viewModel.emailError != nil {
@@ -106,7 +107,7 @@ struct LoginView: View {
                                 .stroke(viewModel.passwordError != nil ? Color.red : Color(.systemGray4), lineWidth: 1.5)
                         )
                         .cornerRadius(12)
-                        .onChange(of: viewModel.password) { _ in
+                        .onChange(of: viewModel.password) { _, _ in
                             if viewModel.passwordError != nil { viewModel.validatePassword() }
                         }
 
@@ -152,61 +153,11 @@ struct LoginView: View {
 
                 // MARK: - Social Login
                 VStack(spacing: 16) {
-                    HStack {
-                        line
-                        Text("OR CONTINUE WITH")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        line
-                    }
-                    .padding(.horizontal)
+                    AuthOrDivider()
+                        .padding(.horizontal)
 
-                    HStack(spacing: 16) {
-                        // Google Button
-                        Button {
-                            // TODO: Google sign-in
-                        } label: {
-                            HStack(spacing: 8) {
-                                GoogleIcon()
-                                Text("Google")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.primary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(Color(.systemBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(.systemGray4), lineWidth: 1.5)
-                            )
-                            .cornerRadius(12)
-                        }
-
-                        // Apple Button
-                        Button {
-                            // TODO: Apple sign-in
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "applelogo")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.primary)
-                                Text("Apple")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.primary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(Color(.systemBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(.systemGray4), lineWidth: 1.5)
-                            )
-                            .cornerRadius(12)
-                        }
-                    }
-                    .padding(.horizontal)
+                    AuthSocialButtonsRow()
+                        .padding(.horizontal)
                 }
 
                 // MARK: - Sign Up
@@ -214,7 +165,7 @@ struct LoginView: View {
                     Text("Don't have an account?")
                         .foregroundColor(.secondary)
                     Button("Sign Up") {
-                        // TODO: Navigate to sign up
+                        onSignUp()
                     }
                     .foregroundColor(.blue)
                     .fontWeight(.semibold)
@@ -225,32 +176,8 @@ struct LoginView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
-
-    private var line: some View {
-        Rectangle()
-            .frame(height: 1)
-            .foregroundColor(Color(.systemGray4))
-    }
-}
-
-// MARK: - Google Icon
-private struct GoogleIcon: View {
-    var body: some View {
-        ZStack {
-            Text("G")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .red, .yellow, .green],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-        }
-        .frame(width: 20, height: 20)
-    }
 }
 
 #Preview {
-    LoginView(onLoginSuccess: {})
+    LoginView(onLoginSuccess: {}, onSignUp: {})
 }
