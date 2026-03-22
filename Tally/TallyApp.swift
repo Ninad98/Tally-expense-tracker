@@ -12,6 +12,7 @@ enum AppScreen {
     case onboarding
     case currencySelection(fromOnboarding: Bool)
     case login
+    case signUp
     case home
 }
 
@@ -83,11 +84,27 @@ struct TallyApp: App {
                     )
 
                 case .login:
-                    LoginView {
-                        withAnimation(.easeInOut(duration: 0.6)) {
-                            screen = .home
+                    LoginView(
+                        onLoginSuccess: {
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                screen = .home
+                            }
+                        },
+                        onSignUp: {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                screen = .signUp
+                            }
                         }
-                    }
+                    )
+
+                case .signUp:
+                    SignUpFlowView(
+                        onBackToLogin: {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                screen = .login
+                            }
+                        }
+                    )
 
                 case .home:
                     HomeView()
