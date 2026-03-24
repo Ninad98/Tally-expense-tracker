@@ -55,7 +55,7 @@ struct SignUpView: View {
         .preferredColorScheme(.light)
     }
 
-    // MARK: - Decorative background
+
 
     private var decorativeBackground: some View {
         ZStack {
@@ -75,7 +75,7 @@ struct SignUpView: View {
         .ignoresSafeArea()
     }
 
-    // MARK: - Header
+
 
     private var headerSection: some View {
         VStack(spacing: 8) {
@@ -95,7 +95,7 @@ struct SignUpView: View {
         .padding(.horizontal, 8)
     }
 
-    // MARK: - Form
+
 
     private var formSection: some View {
         VStack(spacing: 16) {
@@ -229,7 +229,7 @@ struct SignUpView: View {
         }
     }
 
-    // MARK: - Primary button
+
 
     private var createAccountButton: some View {
         Button {
@@ -260,7 +260,6 @@ struct SignUpView: View {
         .padding(.horizontal, 8)
     }
 
-    // MARK: - Footer
 
     private var footerLoginLink: some View {
         HStack(spacing: 4) {
@@ -276,7 +275,6 @@ struct SignUpView: View {
     }
 }
 
-// MARK: - SignUpFlowView
 
 struct SignUpFlowView: View {
     private enum Step {

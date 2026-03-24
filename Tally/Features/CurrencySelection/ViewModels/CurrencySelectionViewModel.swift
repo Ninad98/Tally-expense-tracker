@@ -64,7 +64,6 @@ final class CurrencySelectionViewModel: NSObject, ObservableObject {
     }
 }
 
-// MARK: - CLLocationManagerDelegate
 
 extension CurrencySelectionViewModel: CLLocationManagerDelegate {
 
