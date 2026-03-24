@@ -24,7 +24,6 @@ struct AuthOrDivider: View {
     }
 }
 
-// MARK: - Google icon
 
 struct AuthGoogleIcon: View {
     var body: some View {

@@ -22,12 +22,12 @@ final class LoginViewModel: ObservableObject {
         !email.isEmpty && !password.isEmpty
     }
 
-    func login(onSuccess: () -> Void) {    // ← UPDATED
+    func login(onSuccess: () -> Void) {
         validateEmail()
         validatePassword()
         guard isFormValid else { return }
         // TODO: Wire up Firebase auth later
-        onSuccess()                        // ← UPDATED
+        onSuccess()                        
     }
 
     func validateEmail() {

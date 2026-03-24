@@ -17,7 +17,7 @@ struct LoginView: View {
         ScrollView {
             VStack(spacing: 24) {
 
-                // MARK: - Header
+
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
@@ -38,7 +38,7 @@ struct LoginView: View {
                 }
                 .padding(.top, 48)
 
-                // MARK: - Form
+
                 VStack(spacing: 16) {
 
                     // Email Field
@@ -130,7 +130,6 @@ struct LoginView: View {
                 }
                 .padding(.horizontal)
 
-                // MARK: - Login Button
                 Button {
                     viewModel.login(onSuccess: onLoginSuccess)
                 } label: {
@@ -151,7 +150,7 @@ struct LoginView: View {
                 .padding(.horizontal)
                 .disabled(viewModel.isLoading)
 
-                // MARK: - Social Login
+
                 VStack(spacing: 16) {
                     AuthOrDivider()
                         .padding(.horizontal)
@@ -160,7 +159,7 @@ struct LoginView: View {
                         .padding(.horizontal)
                 }
 
-                // MARK: - Sign Up
+
                 HStack(spacing: 4) {
                     Text("Don't have an account?")
                         .foregroundColor(.secondary)
