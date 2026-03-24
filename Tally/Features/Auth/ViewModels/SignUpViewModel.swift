@@ -6,6 +6,7 @@
 //
 
 import Combine
+import FirebaseAuth
 import SwiftUI
 
 final class SignUpViewModel: ObservableObject {
@@ -18,6 +19,8 @@ final class SignUpViewModel: ObservableObject {
     @Published var fullNameError: String?
     @Published var emailError: String?
     @Published var passwordError: String?
+    @Published var authError: String?
+    @Published var isLoading: Bool = false
 
     var isFormValid: Bool {
         fullNameError == nil && emailError == nil && passwordError == nil &&
@@ -67,10 +70,57 @@ final class SignUpViewModel: ObservableObject {
         validatePassword()
     }
 
-    func createAccount(onSuccess: () -> Void) {
+    func createAccount(onSuccess: @escaping () -> Void) {
+        authError = nil
         validateAll()
         guard isFormValid else { return }
-        onSuccess()
+
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        isLoading = true
+        Task {
+            do {
+                let result = try await Auth.auth().createUser(withEmail: trimmedEmail, password: password)
+                if !trimmedName.isEmpty {
+                    let change = result.user.createProfileChangeRequest()
+                    change.displayName = trimmedName
+                    try await change.commitChanges()
+                }
+                await MainActor.run {
+                    isLoading = false
+                    onSuccess()
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                    mapFirebaseAuthError(error)
+                }
+            }
+        }
+    }
+
+    private func mapFirebaseAuthError(_ error: Error) {
+        let ns = error as NSError
+        guard ns.domain == AuthErrors.domain,
+              let code = AuthErrorCode(rawValue: ns.code) else {
+            authError = error.localizedDescription
+            return
+        }
+        switch code {
+        case .emailAlreadyInUse:
+            emailError = "This email is already in use."
+        case .invalidEmail:
+            emailError = "Invalid email"
+        case .weakPassword:
+            passwordError = "Password must be at least 8 characters."
+        case .networkError:
+            authError = "Network error. Try again."
+        case .operationNotAllowed:
+            authError = "Email sign-in is not enabled for this app."
+        default:
+            authError = error.localizedDescription
+        }
     }
 
     private func isValidEmailFormat(_ value: String) -> Bool {
