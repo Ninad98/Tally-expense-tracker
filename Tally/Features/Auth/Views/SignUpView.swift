@@ -27,8 +27,17 @@ struct SignUpView: View {
                     formSection
                         .padding(.top, 8)
 
+                    if let authError = viewModel.authError {
+                        Label(authError, systemImage: "exclamationmark.circle")
+                            .font(.manrope(.regular, size: 14))
+                            .foregroundStyle(Color.errorRose)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 12)
+                            .padding(.top, 16)
+                    }
+
                     createAccountButton
-                        .padding(.top, 32)
+                        .padding(.top, 24)
 
                     AuthOrDivider()
                         .padding(.top, 32)
@@ -226,20 +235,28 @@ struct SignUpView: View {
         Button {
             viewModel.createAccount(onSuccess: onCreateAccount)
         } label: {
-            Text("Create Account")
-                .font(.urbanist(.bold, size: 18))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 60)
-                .background(Color.primaryBlue)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-                .shadow(
-                    color: Color.primaryBlue.opacity(0.25),
-                    radius: 15,
-                    x: 0,
-                    y: 10
-                )
+            ZStack {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Text("Create Account")
+                        .font(.urbanist(.bold, size: 18))
+                        .foregroundStyle(.white)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 60)
+            .background(Color.primaryBlue)
+            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .shadow(
+                color: Color.primaryBlue.opacity(0.25),
+                radius: 15,
+                x: 0,
+                y: 10
+            )
         }
+        .disabled(viewModel.isLoading)
         .padding(.horizontal, 8)
     }
 

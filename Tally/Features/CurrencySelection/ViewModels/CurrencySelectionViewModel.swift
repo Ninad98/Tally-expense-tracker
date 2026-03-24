@@ -71,11 +71,15 @@ extension CurrencySelectionViewModel: CLLocationManagerDelegate {
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
+            guard isDetecting else { return }
             manager.requestLocation()
         case .denied, .restricted:
             DispatchQueue.main.async {
+                let wasTrying = self.isDetecting
                 self.isDetecting = false
-                self.detectionError = "Location access denied. Please enable it in Settings."
+                if wasTrying {
+                    self.detectionError = "Location access denied. Please enable it in Settings."
+                }
             }
         default:
             break

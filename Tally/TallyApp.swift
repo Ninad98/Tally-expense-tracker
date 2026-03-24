@@ -5,6 +5,7 @@
 //  Created by Mazen Tarek on 3/7/26.
 //
 
+import FirebaseCore
 import SwiftUI
 
 enum AppScreen {
@@ -25,6 +26,8 @@ struct TallyApp: App {
     @State private var screen: AppScreen = .splash
 
     init() {
+        FirebaseApp.configure()
+
         let splash = UserDefaults.standard.bool(forKey: "splashShown")
         let onboarding = UserDefaults.standard.bool(forKey: "onboardingCompleted")
         let currency = UserDefaults.standard.bool(forKey: "currencySelected")
