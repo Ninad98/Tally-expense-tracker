@@ -21,11 +21,12 @@ struct LoginView: View {
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(Color.primaryBlue.opacity(0.1))
                             .frame(width: 72, height: 72)
-                        Image(systemName: "lock.square.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(.blue)
+                        Image("Icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 36, height: 36)
                     }
 
                     Text("Welcome Back")
@@ -151,13 +152,8 @@ struct LoginView: View {
                 .disabled(viewModel.isLoading)
 
 
-                VStack(spacing: 16) {
-                    AuthOrDivider()
-                        .padding(.horizontal)
-
-                    AuthSocialButtonsRow()
-                        .padding(.horizontal)
-                }
+                AuthSocialLoginBlock()
+                    .padding(.horizontal)
 
 
                 HStack(spacing: 4) {

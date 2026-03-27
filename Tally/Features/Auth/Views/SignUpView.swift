@@ -14,68 +14,39 @@ struct SignUpView: View {
     let onCreateAccount: () -> Void
 
     var body: some View {
-        ZStack {
-            Color.pageBG.ignoresSafeArea()
+        ScrollView {
+            VStack(spacing: 0) {
+                headerSection
+                    .padding(.top, 24)
 
-            decorativeBackground
+                formSection
+                    .padding(.top, 8)
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    headerSection
-                        .padding(.top, 24)
-
-                    formSection
-                        .padding(.top, 8)
-
-                    if let authError = viewModel.authError {
-                        Label(authError, systemImage: "exclamationmark.circle")
-                            .font(.manrope(.regular, size: 14))
-                            .foregroundStyle(Color.errorRose)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 16)
-                    }
-
-                    createAccountButton
-                        .padding(.top, 24)
-
-                    AuthOrDivider()
-                        .padding(.top, 32)
-
-                    AuthSocialButtonsRow()
-                        .padding(.top, 24)
-
-                    footerLoginLink
-                        .padding(.top, 24)
-                        .padding(.bottom, 40)
+                if let authError = viewModel.authError {
+                    Label(authError, systemImage: "exclamationmark.circle")
+                        .font(.manrope(.regular, size: 14))
+                        .foregroundStyle(Color.errorRose)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.top, 16)
                 }
-                .padding(.horizontal, 16)
+
+                createAccountButton
+                    .padding(.top, 24)
+
+                AuthSocialLoginBlock()
+                    .padding(.top, 32)
+
+                footerLoginLink
+                    .padding(.top, 24)
+                    .padding(.bottom, 40)
             }
+            .padding(.horizontal, 16)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color.pageBG)
         .preferredColorScheme(.light)
     }
-
-
-
-    private var decorativeBackground: some View {
-        ZStack {
-            Circle()
-                .fill(Color.primaryBlue.opacity(0.12))
-                .frame(width: 192, height: 192)
-                .blur(radius: 48)
-                .offset(x: -120, y: -180)
-
-            Circle()
-                .fill(Color.primaryBlue.opacity(0.08))
-                .frame(width: 192, height: 192)
-                .blur(radius: 48)
-                .offset(x: 160, y: 380)
-        }
-        .allowsHitTesting(false)
-        .ignoresSafeArea()
-    }
-
-
 
     private var headerSection: some View {
         VStack(spacing: 8) {
@@ -116,7 +87,7 @@ struct SignUpView: View {
                 title: "Email Address",
                 systemImage: "envelope",
                 text: $viewModel.email,
-                placeholder: "name@example.com",
+                placeholder: "john@example.com",
                 error: viewModel.emailError,
                 isSecure: false,
                 useEmailKeyboard: true
@@ -141,6 +112,7 @@ struct SignUpView: View {
         .padding(.horizontal, 8)
     }
 
+    // Attribution: GenAI helped me to generate the UI for the labeled field to match my figma design.
     private func labeledField(
         title: String,
         systemImage: String,
@@ -162,12 +134,24 @@ struct SignUpView: View {
                     .foregroundStyle(Color.mutedText)
                     .frame(width: 20)
 
-                innerTextField(
-                    text: text,
-                    placeholder: placeholder,
-                    isSecure: isSecure,
-                    useEmailKeyboard: useEmailKeyboard
-                )
+                Group {
+                    if isSecure {
+                        if viewModel.isPasswordVisible {
+                            TextField("", text: text, prompt: Text(placeholder).foregroundStyle(Color.mutedText))
+                        } else {
+                            SecureField(placeholder, text: text)
+                        }
+                    } else if useEmailKeyboard {
+                        TextField("", text: text, prompt: Text(placeholder).foregroundStyle(Color.mutedText))
+                            .keyboardType(.emailAddress)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    } else {
+                        TextField("", text: text, prompt: Text(placeholder).foregroundStyle(Color.mutedText))
+                            .textInputAutocapitalization(.words)
+                            .autocorrectionDisabled()
+                    }
+                }
                 .font(.manrope(.regular, size: 16))
                 .foregroundStyle(Color.heading)
 
@@ -203,33 +187,6 @@ struct SignUpView: View {
             }
         }
     }
-
-    @ViewBuilder
-    private func innerTextField(
-        text: Binding<String>,
-        placeholder: String,
-        isSecure: Bool,
-        useEmailKeyboard: Bool
-    ) -> some View {
-        if isSecure {
-            if viewModel.isPasswordVisible {
-                TextField("", text: text, prompt: Text(placeholder).foregroundStyle(Color.mutedText))
-            } else {
-                SecureField(placeholder, text: text)
-            }
-        } else if useEmailKeyboard {
-            TextField("", text: text, prompt: Text(placeholder).foregroundStyle(Color.mutedText))
-                .keyboardType(.emailAddress)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-        } else {
-            TextField("", text: text, prompt: Text(placeholder).foregroundStyle(Color.mutedText))
-                .textInputAutocapitalization(.words)
-                .autocorrectionDisabled()
-        }
-    }
-
-
 
     private var createAccountButton: some View {
         Button {
@@ -325,8 +282,8 @@ private struct SignUpErrorPreview: View {
     var body: some View {
         SignUpView(viewModel: viewModel, onBackToLogin: {}, onCreateAccount: {})
             .onAppear {
-                viewModel.fullName = "J"
-                viewModel.email = "not-an-email"
+                viewModel.fullName = "M"
+                viewModel.email = "mazen"
                 viewModel.password = "123"
                 viewModel.validateAll()
             }
