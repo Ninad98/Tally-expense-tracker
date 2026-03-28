@@ -6,6 +6,7 @@
 //
 
 import Combine
+import FirebaseAuth
 import SwiftUI
 
 struct Transaction: Identifiable {
@@ -20,8 +21,13 @@ struct Transaction: Identifiable {
 
 final class HomeViewModel: ObservableObject {
 
+    private let firebaseService: FirebaseServiceProtocol
+    init(firebaseService: FirebaseServiceProtocol = FirebaseService()) {
+        self.firebaseService = firebaseService
+    }
+
     @Published var isLoading: Bool = true
-    @Published var userName: String = ""
+    @Published var fullName: String = ""
     @Published var totalBalance: Double = 0
     @Published var balanceChangePercent: Double = 0
     @Published var monthlyIncome: Double = 0
@@ -41,9 +47,19 @@ final class HomeViewModel: ObservableObject {
 
     func loadData() {
         isLoading = true
-        // TODO: Replace with Firebase fetch
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            self.isLoading = false
+        Task {
+            let name = await getFullName()
+            await MainActor.run {
+                fullName = name
+                isLoading = false
+            }
         }
+    }
+
+    private func getFullName() async -> String {
+        // https://firebase.google.com/docs/auth/ios/manage-users#swift_1
+        // To get current authenticated user.
+        guard let user = Auth.auth().currentUser else { return "" }
+        return await firebaseService.fetchUserFullName(uid: user.uid) ?? ""
     }
 }

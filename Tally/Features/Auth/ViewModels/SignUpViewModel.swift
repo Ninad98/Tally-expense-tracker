@@ -11,6 +11,12 @@ import SwiftUI
 
 final class SignUpViewModel: ObservableObject {
 
+    // Initializing FirebaseService to use firebase related functions.
+    private let firebaseService: FirebaseServiceProtocol
+    init(firebaseService: FirebaseServiceProtocol = FirebaseService()) {
+        self.firebaseService = firebaseService
+    }
+
     @Published var fullName: String = ""
     @Published var email: String = ""
     @Published var password: String = ""
@@ -78,11 +84,22 @@ final class SignUpViewModel: ObservableObject {
         Task {
             do {
                 let result = try await Auth.auth().createUser(withEmail: trimmedEmail, password: password)
+                print("User created successfully with id: \(result.user.uid)")
+
                 if !trimmedName.isEmpty {
                     let change = result.user.createProfileChangeRequest()
                     change.displayName = trimmedName
                     try await change.commitChanges()
                 }
+
+                let currencyId = UserDefaults.standard.string(forKey: "selectedCurrency")
+                try await firebaseService.saveUserToFirestore(
+                    uid: result.user.uid,
+                    email: trimmedEmail,
+                    fullName: trimmedName,
+                    selectedCurrencyId: currencyId
+                )
+
                 await MainActor.run {
                     isLoading = false
                     onSuccess()
