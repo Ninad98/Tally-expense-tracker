@@ -7,10 +7,15 @@
 
 import Combine
 import FirebaseAuth
-import FirebaseFirestore
 import SwiftUI
 
 final class SignUpViewModel: ObservableObject {
+
+    // Initializing FirebaseService to use firebase related functions.
+    private let firebaseService: FirebaseServiceProtocol
+    init(firebaseService: FirebaseServiceProtocol = FirebaseService()) {
+        self.firebaseService = firebaseService
+    }
 
     @Published var fullName: String = ""
     @Published var email: String = ""
@@ -87,10 +92,12 @@ final class SignUpViewModel: ObservableObject {
                     try await change.commitChanges()
                 }
 
-                try await saveUserToFirestore(
+                let currencyId = UserDefaults.standard.string(forKey: "selectedCurrency")
+                try await firebaseService.saveUserToFirestore(
                     uid: result.user.uid,
                     email: trimmedEmail,
-                    fullName: trimmedName
+                    fullName: trimmedName,
+                    selectedCurrencyId: currencyId
                 )
 
                 await MainActor.run {
@@ -104,24 +111,6 @@ final class SignUpViewModel: ObservableObject {
                 }
             }
         }
-    }
-
-    /// Saves user to firestore
-    private func saveUserToFirestore(uid: String, email: String, fullName: String) async throws {
-        var data: [String: Any] = [
-            "email": email,
-            "fullName": fullName,
-            "createdAt": FieldValue.serverTimestamp() // sets timestamp to current server time
-        ]
-        // Getting selected currency in onboarding stage to link it to user.
-        if let currencyId = UserDefaults.standard.string(forKey: "selectedCurrency") {
-            data["selectedCurrencyId"] = currencyId
-            print("Selected currency: \(currencyId)")
-        }
-
-        let db = Firestore.firestore()
-        let ref = db.collection("users").document(uid)
-        try await ref.setData(data)
     }
 
     private func mapFirebaseAuthError(_ error: Error) {

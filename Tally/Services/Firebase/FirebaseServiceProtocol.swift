@@ -7,4 +7,13 @@
 
 import Foundation
 
-protocol FirebaseServiceProtocol { }
+protocol FirebaseServiceProtocol {
+
+    func saveUserToFirestore(
+        uid: String,
+        email: String,
+        fullName: String,
+        selectedCurrencyId: String?
+    ) async throws
+    
+}
