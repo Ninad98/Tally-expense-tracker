@@ -15,5 +15,6 @@ protocol FirebaseServiceProtocol {
         fullName: String,
         selectedCurrencyId: String?
     ) async throws
-    
+
+    func fetchUserFullName(uid: String) async -> String?
 }

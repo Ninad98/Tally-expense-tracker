@@ -67,7 +67,7 @@ struct HomeDashboardView: View {
                 Text("Welcome back,")
                     .font(.manrope(.regular, size: 13))
                     .foregroundStyle(Color.bodyText)
-                Text(viewModel.userName.isEmpty ? "—" : viewModel.userName)
+                Text(viewModel.fullName.isEmpty ? "—" : viewModel.fullName)
                     .font(.urbanist(.bold, size: 18))
                     .foregroundStyle(Color.heading)
             }

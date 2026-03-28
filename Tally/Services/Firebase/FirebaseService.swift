@@ -28,4 +28,18 @@ final class FirebaseService: FirebaseServiceProtocol {
         let ref = db.collection("users").document(uid)
         try await ref.setData(data)
     }
+
+    func fetchUserFullName(uid: String) async -> String? {
+        do {
+            let db = Firestore.firestore()
+            let fetchedUser = try await db.collection("users").document(uid).getDocument()
+            guard fetchedUser.exists,
+                  let name = fetchedUser.data()?["fullName"] as? String,
+                  !name.isEmpty else { return nil }
+            return name
+        } catch {
+            print("Error: \(error.localizedDescription)")
+            return nil
+        }
+    }
 }
