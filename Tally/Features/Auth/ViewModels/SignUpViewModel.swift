@@ -7,6 +7,7 @@
 
 import Combine
 import FirebaseAuth
+import FirebaseFirestore
 import SwiftUI
 
 final class SignUpViewModel: ObservableObject {
@@ -78,11 +79,20 @@ final class SignUpViewModel: ObservableObject {
         Task {
             do {
                 let result = try await Auth.auth().createUser(withEmail: trimmedEmail, password: password)
+                print("User created successfully with id: \(result.user.uid)")
+
                 if !trimmedName.isEmpty {
                     let change = result.user.createProfileChangeRequest()
                     change.displayName = trimmedName
                     try await change.commitChanges()
                 }
+
+                try await saveUserToFirestore(
+                    uid: result.user.uid,
+                    email: trimmedEmail,
+                    fullName: trimmedName
+                )
+
                 await MainActor.run {
                     isLoading = false
                     onSuccess()
@@ -94,6 +104,24 @@ final class SignUpViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    /// Saves user to firestore
+    private func saveUserToFirestore(uid: String, email: String, fullName: String) async throws {
+        var data: [String: Any] = [
+            "email": email,
+            "fullName": fullName,
+            "createdAt": FieldValue.serverTimestamp() // sets timestamp to current server time
+        ]
+        // Getting selected currency in onboarding stage to link it to user.
+        if let currencyId = UserDefaults.standard.string(forKey: "selectedCurrency") {
+            data["selectedCurrencyId"] = currencyId
+            print("Selected currency: \(currencyId)")
+        }
+
+        let db = Firestore.firestore()
+        let ref = db.collection("users").document(uid)
+        try await ref.setData(data)
     }
 
     private func mapFirebaseAuthError(_ error: Error) {
