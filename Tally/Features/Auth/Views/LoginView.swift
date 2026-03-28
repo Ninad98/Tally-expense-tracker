@@ -4,6 +4,8 @@
 //
 //  Created by Ninad Mankar on 3/20/26.
 //
+// Updated by Mazen Tarek on 3/27/26.
+//
 
 import SwiftUI
 
@@ -21,11 +23,12 @@ struct LoginView: View {
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(Color.primaryBlue.opacity(0.1))
                             .frame(width: 72, height: 72)
-                        Image(systemName: "lock.square.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(.blue)
+                        Image("Icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 36, height: 36)
                     }
 
                     Text("Welcome Back")
@@ -52,9 +55,10 @@ struct LoginView: View {
                                 .foregroundColor(.secondary)
                             TextField("name@example.com", text: $viewModel.email)
                                 .keyboardType(.emailAddress)
-                                .autocapitalization(.none)
+                                .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 .onChange(of: viewModel.email) { _, _ in
+                                    viewModel.authError = nil
                                     if viewModel.emailError != nil { viewModel.validateEmail() }
                                 }
                             if viewModel.emailError != nil {
@@ -88,7 +92,7 @@ struct LoginView: View {
                                 .foregroundColor(.secondary)
                             if viewModel.isPasswordVisible {
                                 TextField("...............", text: $viewModel.password)
-                                    .autocapitalization(.none)
+                                    .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
                             } else {
                                 SecureField("...............", text: $viewModel.password)
@@ -108,6 +112,7 @@ struct LoginView: View {
                         )
                         .cornerRadius(12)
                         .onChange(of: viewModel.password) { _, _ in
+                            viewModel.authError = nil
                             if viewModel.passwordError != nil { viewModel.validatePassword() }
                         }
 
@@ -130,6 +135,14 @@ struct LoginView: View {
                 }
                 .padding(.horizontal)
 
+                if let authError = viewModel.authError {
+                    Label(authError, systemImage: "exclamationmark.circle")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                }
+
                 Button {
                     viewModel.login(onSuccess: onLoginSuccess)
                 } label: {
@@ -151,13 +164,8 @@ struct LoginView: View {
                 .disabled(viewModel.isLoading)
 
 
-                VStack(spacing: 16) {
-                    AuthOrDivider()
-                        .padding(.horizontal)
-
-                    AuthSocialButtonsRow()
-                        .padding(.horizontal)
-                }
+                AuthSocialLoginBlock()
+                    .padding(.horizontal)
 
 
                 HStack(spacing: 4) {

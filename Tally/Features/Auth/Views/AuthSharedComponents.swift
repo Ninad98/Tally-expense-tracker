@@ -10,33 +10,40 @@ import SwiftUI
 struct AuthOrDivider: View {
     var body: some View {
         HStack(spacing: 0) {
-            Rectangle()
-                .fill(Color.cardBorder)
-                .frame(height: 1)
+
+            // To draw line on the left side of the OR CONTINUE WITH text.
+            VStack(spacing: 0) {
+                Divider()
+            }
+
             Text("OR CONTINUE WITH")
                 .font(.manrope(.medium, size: 12))
                 .foregroundStyle(Color.mutedText)
+                .tracking(0.5) // Letter spacing
+                .lineLimit(1) // To prevent text fron wrapping
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, 16)
-            Rectangle()
-                .fill(Color.cardBorder)
-                .frame(height: 1)
+
+            // To draw line on the right side of the OR CONTINUE WITH text.
+            VStack(spacing: 0) {
+                Divider()
+            }
         }
     }
 }
 
 
-struct AuthGoogleIcon: View {
+struct AuthSocialLoginBlock: View {
+    var onGoogle: () -> Void = {}
+    var onApple: () -> Void = {}
+
     var body: some View {
-        Text("G")
-            .font(.system(size: 16, weight: .bold))
-            .foregroundStyle(
-                LinearGradient(
-                    colors: [.blue, .red, .yellow, .green],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .frame(width: 20, height: 20)
+        VStack(spacing: 0) {
+            AuthOrDivider()
+
+            AuthSocialButtonsRow(onGoogle: onGoogle, onApple: onApple)
+                .padding(.top, 16)
+        }
     }
 }
 
@@ -48,7 +55,10 @@ struct AuthSocialButtonsRow: View {
         HStack(spacing: 16) {
             Button(action: onGoogle) {
                 HStack(spacing: 8) {
-                    AuthGoogleIcon()
+                    Image("Google")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
                     Text("Google")
                         .font(.manrope(.medium, size: 14))
                         .foregroundStyle(Color.heading)
@@ -65,9 +75,10 @@ struct AuthSocialButtonsRow: View {
 
             Button(action: onApple) {
                 HStack(spacing: 8) {
-                    Image(systemName: "applelogo")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(Color.heading)
+                    Image("Apple")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
                     Text("Apple")
                         .font(.manrope(.medium, size: 14))
                         .foregroundStyle(Color.heading)

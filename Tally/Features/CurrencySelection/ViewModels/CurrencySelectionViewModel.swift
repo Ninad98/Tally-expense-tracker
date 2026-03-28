@@ -39,6 +39,7 @@ final class CurrencySelectionViewModel: NSObject, ObservableObject {
         }
     }
 
+    // Gets coordinates from location and matches it to currency.
     private func reverseGeocode(location: CLLocation) {
         guard let request = MKReverseGeocodingRequest(location: location) else {
             isDetecting = false
