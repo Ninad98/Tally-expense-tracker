@@ -41,17 +41,13 @@ final class SignUpViewModel: ObservableObject {
     }
 
     func validateEmail() {
-        if email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if email.isEmpty {
             emailError = "Email is required"
-        } else if !isValidEmailFormat(email) {
+        } else if !email.contains("@") || !email.contains(".") {
             emailError = "Invalid email"
         } else {
             emailError = nil
         }
-    }
-
-    func setEmailAlreadyInUseError() {
-        emailError = "This email is already in use."
     }
 
     func validatePassword() {
@@ -101,32 +97,10 @@ final class SignUpViewModel: ObservableObject {
     }
 
     private func mapFirebaseAuthError(_ error: Error) {
-        let ns = error as NSError
-        guard ns.domain == AuthErrors.domain,
-              let code = AuthErrorCode(rawValue: ns.code) else {
-            authError = error.localizedDescription
-            return
+        switch FirebaseAuthErrorMapping.map(error, flow: .signUp) {
+        case .email(let message): emailError = message
+        case .password(let message): passwordError = message
+        case .auth(let message): authError = message
         }
-        switch code {
-        case .emailAlreadyInUse:
-            emailError = "This email is already in use."
-        case .invalidEmail:
-            emailError = "Invalid email"
-        case .weakPassword:
-            passwordError = "Password must be at least 8 characters."
-        case .networkError:
-            authError = "Network error. Try again."
-        case .operationNotAllowed:
-            authError = "Email sign-in is not enabled for this app."
-        default:
-            authError = error.localizedDescription
-        }
-    }
-
-    private func isValidEmailFormat(_ value: String) -> Bool {
-        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard trimmed.contains("@"), let at = trimmed.firstIndex(of: "@") else { return false }
-        let domain = trimmed[trimmed.index(after: at)...]
-        return domain.contains(".") && trimmed.count > 3
     }
 }
