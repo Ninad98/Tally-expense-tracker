@@ -164,7 +164,18 @@ struct LoginView: View {
                 .disabled(viewModel.isLoading)
 
 
-                AuthSocialLoginBlock()
+                AuthSocialLoginBlock(onGoogle: {
+                    Task {
+                        do {
+                            try await Authentication().googleOauth()
+                            onLoginSuccess()
+                        } catch AuthenticationError.runtimeError(let errorMessage) {
+                            viewModel.authError = errorMessage
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                    }
+                })
                     .padding(.horizontal)
 
 
