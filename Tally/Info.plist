@@ -4,6 +4,17 @@
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Tally uses your location to automatically detect your local currency.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.413981136741-sm0d9gc6a70vf77trq8dmt10b79lcv9r</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Urbanist-Regular.ttf</string>

@@ -12,6 +12,7 @@ struct SignUpView: View {
     @ObservedObject var viewModel: SignUpViewModel
     let onBackToLogin: () -> Void
     let onCreateAccount: () -> Void
+    var onGoogleSignIn: () -> Void = {}
 
     var body: some View {
         ScrollView {
@@ -34,7 +35,18 @@ struct SignUpView: View {
                 createAccountButton
                     .padding(.top, 24)
 
-                AuthSocialLoginBlock()
+                AuthSocialLoginBlock(onGoogle: {
+                    Task {
+                        do {
+                            try await Authentication().googleOauth()
+                            onGoogleSignIn()
+                        } catch AuthenticationError.runtimeError(let errorMessage) {
+                            viewModel.authError = errorMessage
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                    }
+                })
                     .padding(.top, 32)
 
                 footerLoginLink
@@ -243,6 +255,7 @@ struct SignUpFlowView: View {
     @State private var step: Step = .form
 
     let onBackToLogin: () -> Void
+    var onGoogleSignIn: () -> Void = {}
 
     var body: some View {
         Group {
@@ -255,7 +268,8 @@ struct SignUpFlowView: View {
                         withAnimation(.easeInOut(duration: 0.35)) {
                             step = .done
                         }
-                    }
+                    },
+                    onGoogleSignIn: onGoogleSignIn
                 )
             case .done:
                 SignUpDoneView {
