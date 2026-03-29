@@ -42,7 +42,7 @@ struct Authentication {
         let googleUser = try await Auth.auth().signIn(with: credential)
 
         // Saving user from google to firestore
-        try await saveGoogleToFirestore(user: googleUser.user)
+        try await saveGoogleUserToFirestore(user: googleUser.user)
     }
 
     private func saveGoogleUserToFirestore(user: User) async throws {
