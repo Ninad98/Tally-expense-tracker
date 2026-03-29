@@ -6,6 +6,7 @@
 //
 
 import FirebaseCore
+import GoogleSignIn
 import SwiftUI
 
 enum AppScreen {
@@ -106,12 +107,20 @@ struct TallyApp: App {
                             withAnimation(.easeInOut(duration: 0.35)) {
                                 screen = .login
                             }
+                        },
+                        onGoogleSignIn: {
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                screen = .home
+                            }
                         }
                     )
 
                 case .home:
                     HomeView()
                 }
+            }
+            .onOpenURL { url in
+                GIDSignIn.sharedInstance.handle(url)
             }
         }
     }
