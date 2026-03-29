@@ -39,7 +39,22 @@ struct Authentication {
             withIDToken: idToken,
             accessToken: user.accessToken.tokenString
         )
-        try await Auth.auth().signIn(with: credential)
+        let googleUser = try await Auth.auth().signIn(with: credential)
+
+        // Saving user from google to firestore
+        try await saveGoogleToFirestore(user: googleUser.user)
+    }
+
+    private func saveGoogleUserToFirestore(user: User) async throws {
+
+        let currencyId = UserDefaults.standard.string(forKey: "selectedCurrency")
+
+        try await FirebaseService().saveUserToFirestore(
+            uid: user.uid,
+            email: user.email ?? "",
+            fullName: user.displayName ?? "",
+            selectedCurrencyId: currencyId
+        )
     }
 
     func logout() throws {
