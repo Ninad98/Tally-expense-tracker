@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeDashboardView: View {
 
     @ObservedObject var viewModel: HomeViewModel
+    @Binding var selectedTab: Int // Creates a two-way read and write to selectedTab variable.
 
     var body: some View {
         ZStack {
@@ -97,7 +98,7 @@ struct HomeDashboardView: View {
                 .font(.manrope(.medium, size: 14))
                 .foregroundStyle(Color.mutedText)
 
-            Text(formatCurrency(viewModel.totalBalance))
+            Text(viewModel.totalBalance.asCurrency())
                 .font(.urbanist(.extraBold, size: 36))
                 .foregroundStyle(Color.heading)
 
@@ -134,13 +135,18 @@ struct HomeDashboardView: View {
 
 
     private var budgetSection: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                selectedTab = 1 // This sets the index to 1 to navigate to BudgetView.
+            }
+        } label: {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Monthly Budget")
                     .font(.urbanist(.bold, size: 18))
                     .foregroundStyle(Color.heading)
                 Spacer()
-                Text("Remaining: \(formatCurrency(viewModel.budgetRemaining))")
+                Text("Remaining: \(viewModel.budgetRemaining.asCurrency())")
                     .font(.manrope(.medium, size: 13))
                     .foregroundStyle(Color.primaryBlue)
             }
@@ -158,11 +164,11 @@ struct HomeDashboardView: View {
             .frame(height: 10)
 
             HStack {
-                Text("SPENT: \(formatCurrency(viewModel.budgetSpent))")
+                Text("SPENT: \(viewModel.budgetSpent.asCurrency())")
                     .font(.manrope(.medium, size: 12))
                     .foregroundStyle(Color.mutedText)
                 Spacer()
-                Text("GOAL: \(formatCurrency(viewModel.budgetGoal))")
+                Text("GOAL: \(viewModel.budgetGoal.asCurrency())")
                     .font(.manrope(.medium, size: 12))
                     .foregroundStyle(Color.mutedText)
             }
@@ -171,6 +177,8 @@ struct HomeDashboardView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+        }
+        .buttonStyle(.plain)
     }
 
 
@@ -196,7 +204,7 @@ struct HomeDashboardView: View {
                 .font(.manrope(.medium, size: 13))
                 .foregroundStyle(Color.mutedText)
 
-            Text(formatCurrency(amount))
+            Text(amount.asCurrency())
                 .font(.urbanist(.bold, size: 20))
                 .foregroundStyle(isIncome ? Color.green : Color.errorRose)
         }
@@ -279,7 +287,7 @@ struct HomeDashboardView: View {
 
             Spacer()
 
-            Text((transaction.isIncome ? "+" : "-") + formatCurrency(transaction.amount))
+            Text((transaction.isIncome ? "+" : "-") + transaction.amount.asCurrency())
                 .font(.urbanist(.bold, size: 16))
                 .foregroundStyle(transaction.isIncome ? Color.green : Color.errorRose)
         }
@@ -288,16 +296,8 @@ struct HomeDashboardView: View {
     }
 
 
-    private func formatCurrency(_ value: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: value)) ?? "$0.00"
-    }
 }
 
 #Preview {
-    HomeDashboardView(viewModel: HomeViewModel())
+    HomeDashboardView(viewModel: HomeViewModel(), selectedTab: .constant(0))
 }

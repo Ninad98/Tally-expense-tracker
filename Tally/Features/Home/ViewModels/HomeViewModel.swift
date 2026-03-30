@@ -48,18 +48,25 @@ final class HomeViewModel: ObservableObject {
     func loadData() {
         isLoading = true
         Task {
-            let name = await getFullName()
+            // https://firebase.google.com/docs/auth/ios/manage-users#swift_1
+            // To get current authenticated user.
+            guard let user = Auth.auth().currentUser else {
+                await MainActor.run {
+                    isLoading = false
+                }
+                return
+            }
+
+            // Fetches user's full name and active budget from Firebase.
+            let name = await firebaseService.fetchUserFullName(uid: user.uid) ?? ""
+            let budget = await firebaseService.fetchActiveBudget(uid: user.uid)
+
             await MainActor.run {
                 fullName = name
+                budgetGoal = budget?.totalLimitBase ?? 0
+                // TODO: Budget spent calculated from expenses added
                 isLoading = false
             }
         }
-    }
-
-    private func getFullName() async -> String {
-        // https://firebase.google.com/docs/auth/ios/manage-users#swift_1
-        // To get current authenticated user.
-        guard let user = Auth.auth().currentUser else { return "" }
-        return await firebaseService.fetchUserFullName(uid: user.uid) ?? ""
     }
 }
