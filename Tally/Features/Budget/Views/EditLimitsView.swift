@@ -161,18 +161,23 @@ struct EditLimitsView: View {
     }
 
     // TODO: Button should allow user to create a new category, select icon, and description.
+    // TODO: Also allow user to delete his defined category by swiping left to delete.
     private var addCategoryButton: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "plus")
-                .font(.system(size: 14, weight: .semibold))
-            Text("Add New Category")
-                .font(.manrope(.bold, size: 14))
+        Button{
+            addCategory()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("Add New Category")
+                    .font(.manrope(.bold, size: 14))
+            }
+            .foregroundStyle(Color.mutedText)
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .foregroundStyle(Color.mutedText)
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
     private var saveButton: some View {
@@ -223,6 +228,11 @@ struct EditLimitsView: View {
                 }
             }
         }
+    }
+    
+    private func addCategory(){
+        print("Button clicked")
+        // TODO: Implement addCategory to add new categoryRow, with editable name, icon and description and amount
     }
 
 }
