@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeDashboardView: View {
 
     @ObservedObject var viewModel: HomeViewModel
+    @Binding var selectedTab: Int // Creates a two-way read and write to selectedTab variable.
 
     var body: some View {
         ZStack {
@@ -134,6 +135,11 @@ struct HomeDashboardView: View {
 
 
     private var budgetSection: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.35)) {
+                selectedTab = 1 // This sets the index to 1 to navigate to BudgetView.
+            }
+        } label: {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Monthly Budget")
@@ -171,6 +177,8 @@ struct HomeDashboardView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+        }
+        .buttonStyle(.plain)
     }
 
 
@@ -299,5 +307,5 @@ struct HomeDashboardView: View {
 }
 
 #Preview {
-    HomeDashboardView(viewModel: HomeViewModel())
+    HomeDashboardView(viewModel: HomeViewModel(), selectedTab: .constant(0))
 }
