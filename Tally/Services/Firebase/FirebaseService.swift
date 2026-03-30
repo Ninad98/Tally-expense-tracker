@@ -11,13 +11,11 @@ import Foundation
 final class FirebaseService: FirebaseServiceProtocol {
 
     func saveUserToFirestore(uid: String, email: String, fullName: String, selectedCurrencyId: String?) async throws {
-
         let db = Firestore.firestore()
         let ref = db.collection("users").document(uid)
 
-        // Check first if user exists before creating a new entry in firestore.
         let snapshot = try await ref.getDocument()
-        if snapshot.exists { 
+        if snapshot.exists {
             print("User already exists in firestore.")
             return
         }
@@ -25,13 +23,11 @@ final class FirebaseService: FirebaseServiceProtocol {
         var data: [String: Any] = [
             "email": email,
             "fullName": fullName,
-            "createdAt": FieldValue.serverTimestamp() // sets timestamp to current server time
+            "createdAt": FieldValue.serverTimestamp()
         ]
 
-        // Getting selected currency in onboarding stage to link it to user.
         if let currencyId = selectedCurrencyId {
             data["selectedCurrencyId"] = currencyId
-            print("Selected currency: \(currencyId)")
         }
 
         try await ref.setData(data)
@@ -57,15 +53,13 @@ final class FirebaseService: FirebaseServiceProtocol {
             let snapshot = try await db.collection("users").document(uid)
                 .collection("budgets").limit(to: 1).getDocuments()
 
-            guard let doc = snapshot.documents.first 
-            else { 
+            guard let doc = snapshot.documents.first else {
                 print("No budget found for user.")
-                return nil 
+                return nil
             }
 
             let data = doc.data()
 
-            // Converts firestore dict data into our CategoryLimit model.
             var categories: [CategoryLimit] = []
             if let firestoreCategoryLimits = data["categoryLimits"] as? [[String: Any]] {
                 for item in firestoreCategoryLimits {
@@ -100,12 +94,8 @@ final class FirebaseService: FirebaseServiceProtocol {
         let budgetsRef = db.collection("users").document(uid).collection("budgets")
 
         var totalLimit = 0.0
-        for cat in categoryLimits {
-            totalLimit += cat.limit
-        }
+        for cat in categoryLimits { totalLimit += cat.limit }
 
-        // This is the opposite of what we did in fetchActiveBudget(), here we convert our
-        // CategoryLimit model into a dict that can be saved to firestore.
         let categoriesData: [[String: Any]] = categoryLimits.map { cat in
             [
                 "categoryId": cat.id,
@@ -124,7 +114,6 @@ final class FirebaseService: FirebaseServiceProtocol {
             "updatedAt": FieldValue.serverTimestamp()
         ]
 
-        // Create a new budget entry if it doesn't exist yet.
         if existingBudgetId == nil {
             data["createdAt"] = FieldValue.serverTimestamp()
         }
@@ -133,8 +122,102 @@ final class FirebaseService: FirebaseServiceProtocol {
             ? budgetsRef.document(existingBudgetId!)
             : budgetsRef.document()
 
-        // If budget document already exists, we merge the changes into it.
         try await ref.setData(data, merge: existingBudgetId != nil)
     }
 
+
+    func addTransaction(
+        uid: String,
+        title: String,
+        amount: Double,
+        categoryId: String,
+        categoryName: String,
+        categoryIcon: String,
+        type: TransactionType,
+        date: Date,
+        note: String
+    ) async throws {
+        let db = Firestore.firestore()
+        let ref = db.collection("users").document(uid)
+            .collection("transactions").document()
+
+        let data: [String: Any] = [
+            "title": title,
+            "amount": amount,
+            "categoryId": categoryId,
+            "categoryName": categoryName,
+            "categoryIcon": categoryIcon,
+            "type": type.rawValue,
+            "date": Timestamp(date: date),
+            "note": note,
+            "createdAt": FieldValue.serverTimestamp()
+        ]
+
+        try await ref.setData(data)
+    }
+
+    func fetchRecentTransactions(uid: String, limit: Int) async -> [AppTransaction] {
+        do {
+            let db = Firestore.firestore()
+            let snapshot = try await db.collection("users").document(uid)
+                .collection("transactions")
+                .order(by: "date", descending: true)
+                .limit(to: limit)
+                .getDocuments()
+
+            return snapshot.documents.compactMap { mapTransaction($0) }
+        } catch {
+            print("Error fetching recent transactions: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+    func fetchMonthlyTransactions(uid: String) async -> [AppTransaction] {
+        do {
+            let db = Firestore.firestore()
+            let calendar = Calendar.current
+            let now = Date()
+            guard let monthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)),
+                  let monthEnd = calendar.date(byAdding: .month, value: 1, to: monthStart) else {
+                return []
+            }
+
+            let snapshot = try await db.collection("users").document(uid)
+                .collection("transactions")
+                .whereField("date", isGreaterThanOrEqualTo: Timestamp(date: monthStart))
+                .whereField("date", isLessThan: Timestamp(date: monthEnd))
+                .order(by: "date", descending: true)
+                .getDocuments()
+
+            return snapshot.documents.compactMap { mapTransaction($0) }
+        } catch {
+            print("Error fetching monthly transactions: \(error.localizedDescription)")
+            return []
+        }
+    }
+
+
+    private func mapTransaction(_ doc: QueryDocumentSnapshot) -> AppTransaction? {
+        let data = doc.data()
+        guard
+            let title = data["title"] as? String,
+            let amount = data["amount"] as? Double,
+            let typeStr = data["type"] as? String,
+            let type = TransactionType(rawValue: typeStr),
+            let dateTimestamp = data["date"] as? Timestamp
+        else { return nil }
+
+        return AppTransaction(
+            id: doc.documentID,
+            title: title,
+            amount: amount,
+            categoryId: data["categoryId"] as? String ?? "",
+            categoryName: data["categoryName"] as? String ?? "",
+            categoryIcon: data["categoryIcon"] as? String ?? "questionmark",
+            type: type,
+            date: dateTimestamp.dateValue(),
+            note: data["note"] as? String ?? "",
+            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? dateTimestamp.dateValue()
+        )
+    }
 }

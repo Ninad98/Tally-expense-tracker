@@ -11,6 +11,7 @@ struct HomeView: View {
 
     @StateObject private var homeViewModel = HomeViewModel()
     @State private var selectedTab: Int = 0
+    @State private var showAddTransaction: Bool = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -28,8 +29,14 @@ struct HomeView: View {
             customTabBar
         }
         .ignoresSafeArea(edges: .bottom)
+        .sheet(isPresented: $showAddTransaction) {
+            AddTransactionView {
+                homeViewModel.loadData()
+            }
+        }
     }
 
+    // MARK: - Custom Tab Bar
 
     private var customTabBar: some View {
         ZStack {
@@ -46,9 +53,9 @@ struct HomeView: View {
             .background(Color.white)
             .shadow(color: Color.black.opacity(0.08), radius: 16, x: 0, y: -4)
 
-            
+            // FAB
             Button {
-                // TODO: Add transaction
+                showAddTransaction = true
             } label: {
                 ZStack {
                     Circle()

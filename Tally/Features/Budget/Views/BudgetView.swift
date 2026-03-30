@@ -170,9 +170,11 @@ struct BudgetView: View {
 
             Spacer()
 
-            Text(0.asCurrency())
+            Text(viewModel.spentForCategory(category.id).asCurrency())
                 .font(.urbanist(.bold, size: 16))
-                .foregroundStyle(Color.heading)
+                .foregroundStyle(
+                    viewModel.spentForCategory(category.id) > 0 ? Color.errorRose : Color.heading
+                )
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
