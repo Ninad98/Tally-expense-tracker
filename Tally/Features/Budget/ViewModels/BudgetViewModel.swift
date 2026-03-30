@@ -21,24 +21,29 @@ final class BudgetViewModel: ObservableObject {
     @Published var isLoading: Bool = true
     @Published var monthlyTransactions: [AppTransaction] = []
 
+    // This is calculated from all the category limits.
     var totalLimit: Double {
         budget?.totalLimitBase ?? 0
     }
 
+    // This is the list of limits for each category.
     var categoryLimits: [CategoryLimit] {
         budget?.categoryLimits ?? []
     }
 
+    // This is the total spent on all categories, computed from expenses added.
     var totalSpent: Double {
         monthlyTransactions
             .filter { !$0.isIncome }
             .reduce(0) { $0 + $1.amount }
     }
 
+    // This is the total remaining budget.
     var totalRemaining: Double {
         max(totalLimit - totalSpent, 0)
     }
 
+    // This is the progress of the budget in percentage, for the bar to show amount spent.
     var progress: Double {
         guard totalLimit > 0 else { return 0 }
         return min(totalSpent / totalLimit, 1.0)
@@ -50,6 +55,7 @@ final class BudgetViewModel: ObservableObject {
         return formatter.string(from: Date())
     }
 
+    // This is to check if the user has a budget set or not yet.
     var hasBudget: Bool { budget != nil }
 
     func spentForCategory(_ categoryId: String) -> Double {

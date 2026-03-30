@@ -14,6 +14,7 @@ final class FirebaseService: FirebaseServiceProtocol {
         let db = Firestore.firestore()
         let ref = db.collection("users").document(uid)
 
+        // Check first if user exists before creating a new entry in firestore.
         let snapshot = try await ref.getDocument()
         if snapshot.exists {
             print("User already exists in firestore.")
@@ -23,11 +24,13 @@ final class FirebaseService: FirebaseServiceProtocol {
         var data: [String: Any] = [
             "email": email,
             "fullName": fullName,
-            "createdAt": FieldValue.serverTimestamp()
+            "createdAt": FieldValue.serverTimestamp() // sets timestamp to current server time
         ]
 
+        // Getting selected currency in onboarding stage to link it to user.
         if let currencyId = selectedCurrencyId {
             data["selectedCurrencyId"] = currencyId
+            print("Selected currency: \(currencyId)")
         }
 
         try await ref.setData(data)
@@ -60,6 +63,7 @@ final class FirebaseService: FirebaseServiceProtocol {
 
             let data = doc.data()
 
+            // Converts firestore dict data into our CategoryLimit model.
             var categories: [CategoryLimit] = []
             if let firestoreCategoryLimits = data["categoryLimits"] as? [[String: Any]] {
                 for item in firestoreCategoryLimits {
@@ -96,6 +100,8 @@ final class FirebaseService: FirebaseServiceProtocol {
         var totalLimit = 0.0
         for cat in categoryLimits { totalLimit += cat.limit }
 
+        // This is the opposite of what we did in fetchActiveBudget(), here we convert our
+        // CategoryLimit model into a dict that can be saved to firestore.
         let categoriesData: [[String: Any]] = categoryLimits.map { cat in
             [
                 "categoryId": cat.id,
@@ -114,6 +120,7 @@ final class FirebaseService: FirebaseServiceProtocol {
             "updatedAt": FieldValue.serverTimestamp()
         ]
 
+        // Create a new budget entry if it doesn't exist yet.
         if existingBudgetId == nil {
             data["createdAt"] = FieldValue.serverTimestamp()
         }
@@ -122,6 +129,7 @@ final class FirebaseService: FirebaseServiceProtocol {
             ? budgetsRef.document(existingBudgetId!)
             : budgetsRef.document()
 
+        // If budget document already exists, we merge the changes into it.
         try await ref.setData(data, merge: existingBudgetId != nil)
     }
 

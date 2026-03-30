@@ -10,7 +10,7 @@ import SwiftUI
 struct HomeDashboardView: View {
 
     @ObservedObject var viewModel: HomeViewModel
-    @Binding var selectedTab: Int
+    @Binding var selectedTab: Int // Creates a two-way read and write to selectedTab variable.
 
     var body: some View {
         ZStack {
@@ -52,7 +52,6 @@ struct HomeDashboardView: View {
         }
     }
 
-    // MARK: - Header
     private var headerRow: some View {
         HStack(spacing: 12) {
             ZStack {
@@ -91,7 +90,6 @@ struct HomeDashboardView: View {
         }
     }
 
-    // MARK: - Balance Card
     private var balanceCard: some View {
         VStack(spacing: 12) {
             Text("Total Balance")
@@ -133,11 +131,10 @@ struct HomeDashboardView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
-    // MARK: - Budget Section
     private var budgetSection: some View {
         Button {
             withAnimation(.easeInOut(duration: 0.35)) {
-                selectedTab = 1
+                selectedTab = 1 // This sets the index to 1 to navigate to BudgetView.
             }
         } label: {
             VStack(alignment: .leading, spacing: 12) {
@@ -181,7 +178,6 @@ struct HomeDashboardView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: - Income / Expense Row
     private var incomeExpenseRow: some View {
         HStack(spacing: 16) {
             summaryCard(title: "Income", amount: viewModel.monthlyIncome, isIncome: true)
@@ -215,7 +211,6 @@ struct HomeDashboardView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
-    // MARK: - Recent Transactions
     private var recentTransactionsSection: some View {
         VStack(spacing: 12) {
             HStack {
@@ -295,7 +290,6 @@ struct HomeDashboardView: View {
         .padding(.vertical, 14)
     }
 
-    // MARK: - Helpers
     private func formatCurrency(_ value: Double) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
