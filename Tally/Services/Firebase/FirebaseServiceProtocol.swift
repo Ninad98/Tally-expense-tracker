@@ -19,4 +19,6 @@ protocol FirebaseServiceProtocol {
     func fetchUserFullName(uid: String) async -> String?
 
     func fetchActiveBudget(uid: String) async -> Budget?
+
+    func saveBudget(uid: String, categoryLimits: [CategoryLimit], existingBudgetId: String?) async throws
 }

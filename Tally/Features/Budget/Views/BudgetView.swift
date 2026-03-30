@@ -15,6 +15,7 @@ import SwiftUI
 struct BudgetView: View {
 
     @StateObject private var viewModel = BudgetViewModel()
+    @State private var showEditLimits = false
 
     var body: some View {
         ZStack {
@@ -29,6 +30,12 @@ struct BudgetView: View {
             }
         }
         .onAppear { viewModel.loadBudget() }
+        .sheet(isPresented: $showEditLimits) {
+            EditLimitsView(
+                existingBudget: viewModel.budget,
+                onSave: { viewModel.loadBudget() }
+            )
+        }
     }
 
     private var budgetContent: some View {
@@ -69,10 +76,10 @@ struct BudgetView: View {
                         .font(.manrope(.medium, size: 13))
                         .foregroundStyle(Color.mutedText)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(formatCurrency(viewModel.totalSpent))
+                        Text(viewModel.totalSpent.asCurrency())
                             .font(.urbanist(.extraBold, size: 28))
                             .foregroundStyle(Color.heading)
-                        Text("/ \(formatCurrency(viewModel.totalLimit))")
+                        Text("/ \(viewModel.totalLimit.asCurrency())")
                             .font(.manrope(.medium, size: 16))
                             .foregroundStyle(Color.mutedText)
                     }
@@ -94,12 +101,12 @@ struct BudgetView: View {
             .frame(height: 10)
 
             HStack {
-                Text("Remaining: \(formatCurrency(viewModel.totalRemaining))")
+                Text("Remaining: \(viewModel.totalRemaining.asCurrency())")
                     .font(.manrope(.medium, size: 12))
                     .foregroundStyle(Color.mutedText)
                 Spacer()
                 Button("Edit Limits") {
-                    // TODO: Clicking this button should do the same as the Edit Limits button in the actionButtons
+                    showEditLimits = true
                 }
                 .font(.manrope(.bold, size: 13))
                 .foregroundStyle(Color.primaryBlue)
@@ -156,14 +163,14 @@ struct BudgetView: View {
                 Text(category.name)
                     .font(.manrope(.bold, size: 15))
                     .foregroundStyle(Color.heading)
-                Text("limit \(formatCurrency(category.limit))")
+                Text("limit \(category.limit.asCurrency())")
                     .font(.manrope(.regular, size: 12))
                     .foregroundStyle(Color.mutedText)
             }
 
             Spacer()
 
-            Text(formatCurrency(0))
+            Text(0.asCurrency())
                 .font(.urbanist(.bold, size: 16))
                 .foregroundStyle(Color.heading)
         }
@@ -174,7 +181,7 @@ struct BudgetView: View {
     private var actionButtons: some View {
         HStack(spacing: 12) {
             Button {
-                // TODO: Display edit limits modal
+                showEditLimits = true
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "pencil")
@@ -204,14 +211,6 @@ struct BudgetView: View {
         }
     }
 
-    private func formatCurrency(_ value: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencySymbol = "$"
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
-        return formatter.string(from: NSNumber(value: value)) ?? "$0.00"
-    }
 }
 
 #Preview {

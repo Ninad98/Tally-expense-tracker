@@ -95,4 +95,46 @@ final class FirebaseService: FirebaseServiceProtocol {
         }
     }
 
+    func saveBudget(uid: String, categoryLimits: [CategoryLimit], existingBudgetId: String?) async throws {
+        let db = Firestore.firestore()
+        let budgetsRef = db.collection("users").document(uid).collection("budgets")
+
+        var totalLimit = 0.0
+        for cat in categoryLimits {
+            totalLimit += cat.limit
+        }
+
+        // This is the opposite of what we did in fetchActiveBudget(), here we convert our
+        // CategoryLimit model into a dict that can be saved to firestore.
+        let categoriesData: [[String: Any]] = categoryLimits.map { cat in
+            [
+                "categoryId": cat.id,
+                "name": cat.name,
+                "description": cat.description,
+                "icon": cat.icon,
+                "limit": cat.limit
+            ]
+        }
+
+        var data: [String: Any] = [
+            "name": "Monthly Budget",
+            "period": "monthly",
+            "totalLimitBase": totalLimit,
+            "categoryLimits": categoriesData,
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+
+        // Create a new budget entry if it doesn't exist yet.
+        if existingBudgetId == nil {
+            data["createdAt"] = FieldValue.serverTimestamp()
+        }
+
+        let ref = existingBudgetId != nil
+            ? budgetsRef.document(existingBudgetId!)
+            : budgetsRef.document()
+
+        // If budget document already exists, we merge the changes into it.
+        try await ref.setData(data, merge: existingBudgetId != nil)
+    }
+
 }
