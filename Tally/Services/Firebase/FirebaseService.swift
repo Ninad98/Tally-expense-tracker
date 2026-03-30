@@ -12,6 +12,16 @@ final class FirebaseService: FirebaseServiceProtocol {
 
     func saveUserToFirestore(uid: String, email: String, fullName: String, selectedCurrencyId: String?) async throws {
 
+        let db = Firestore.firestore()
+        let ref = db.collection("users").document(uid)
+
+        // Check first if user exists before creating a new entry in firestore.
+        let snapshot = try await ref.getDocument()
+        if snapshot.exists { 
+            print("User already exists in firestore.")
+            return
+        }
+
         var data: [String: Any] = [
             "email": email,
             "fullName": fullName,
@@ -24,8 +34,6 @@ final class FirebaseService: FirebaseServiceProtocol {
             print("Selected currency: \(currencyId)")
         }
 
-        let db = Firestore.firestore()
-        let ref = db.collection("users").document(uid)
         try await ref.setData(data)
     }
 
