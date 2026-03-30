@@ -9,32 +9,23 @@ import Combine
 import FirebaseAuth
 import SwiftUI
 
-struct Transaction: Identifiable {
-    let id: UUID
-    let title: String
-    let category: String
-    let date: String
-    let amount: Double
-    let isIncome: Bool
-    let iconName: String
-}
-
 final class HomeViewModel: ObservableObject {
 
     private let firebaseService: FirebaseServiceProtocol
+
     init(firebaseService: FirebaseServiceProtocol = FirebaseService()) {
         self.firebaseService = firebaseService
     }
 
     @Published var isLoading: Bool = true
     @Published var fullName: String = ""
-    @Published var totalBalance: Double = 0
-    @Published var balanceChangePercent: Double = 0
+    @Published var recentTransactions: [AppTransaction] = []
     @Published var monthlyIncome: Double = 0
     @Published var monthlyExpenses: Double = 0
+    @Published var totalBalance: Double = 0
+    @Published var balanceChangePercent: Double = 0
     @Published var budgetSpent: Double = 0
     @Published var budgetGoal: Double = 0
-    @Published var recentTransactions: [Transaction] = []
 
     var budgetProgress: Double {
         guard budgetGoal > 0 else { return 0 }
@@ -47,24 +38,36 @@ final class HomeViewModel: ObservableObject {
 
     func loadData() {
         isLoading = true
-        Task {
-            // https://firebase.google.com/docs/auth/ios/manage-users#swift_1
-            // To get current authenticated user.
-            guard let user = Auth.auth().currentUser else {
-                await MainActor.run {
-                    isLoading = false
-                }
-                return
-            }
+        guard let uid = Auth.auth().currentUser?.uid else {
+            isLoading = false
+            return
+        }
 
-            // Fetches user's full name and active budget from Firebase.
-            let name = await firebaseService.fetchUserFullName(uid: user.uid) ?? ""
-            let budget = await firebaseService.fetchActiveBudget(uid: user.uid)
+        Task {
+            async let name = firebaseService.fetchUserFullName(uid: uid)
+            async let recent = firebaseService.fetchRecentTransactions(uid: uid, limit: 5)
+            async let monthly = firebaseService.fetchMonthlyTransactions(uid: uid)
+            async let budget = firebaseService.fetchActiveBudget(uid: uid)
+
+            let (fetchedName, recentTx, monthlyTx, fetchedBudget) = await (name, recent, monthly, budget)
 
             await MainActor.run {
-                fullName = name
-                budgetGoal = budget?.totalLimitBase ?? 0
-                // TODO: Budget spent calculated from expenses added
+                fullName = fetchedName ?? ""
+                recentTransactions = recentTx
+
+                monthlyIncome = monthlyTx
+                    .filter { $0.isIncome }
+                    .reduce(0) { $0 + $1.amount }
+
+                monthlyExpenses = monthlyTx
+                    .filter { !$0.isIncome }
+                    .reduce(0) { $0 + $1.amount }
+
+                totalBalance = monthlyIncome - monthlyExpenses
+
+                budgetGoal = fetchedBudget?.totalLimitBase ?? 0
+                budgetSpent = monthlyExpenses
+
                 isLoading = false
             }
         }

@@ -10,7 +10,7 @@ import SwiftUI
 struct HomeDashboardView: View {
 
     @ObservedObject var viewModel: HomeViewModel
-    @Binding var selectedTab: Int // Creates a two-way read and write to selectedTab variable.
+    @Binding var selectedTab: Int
 
     var body: some View {
         ZStack {
@@ -52,7 +52,7 @@ struct HomeDashboardView: View {
         }
     }
 
-
+    // MARK: - Header
     private var headerRow: some View {
         HStack(spacing: 12) {
             ZStack {
@@ -91,7 +91,7 @@ struct HomeDashboardView: View {
         }
     }
 
-
+    // MARK: - Balance Card
     private var balanceCard: some View {
         VStack(spacing: 12) {
             Text("Total Balance")
@@ -133,55 +133,55 @@ struct HomeDashboardView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
-
+    // MARK: - Budget Section
     private var budgetSection: some View {
         Button {
             withAnimation(.easeInOut(duration: 0.35)) {
-                selectedTab = 1 // This sets the index to 1 to navigate to BudgetView.
+                selectedTab = 1
             }
         } label: {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Monthly Budget")
-                    .font(.urbanist(.bold, size: 18))
-                    .foregroundStyle(Color.heading)
-                Spacer()
-                Text("Remaining: \(viewModel.budgetRemaining.asCurrency())")
-                    .font(.manrope(.medium, size: 13))
-                    .foregroundStyle(Color.primaryBlue)
-            }
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Monthly Budget")
+                        .font(.urbanist(.bold, size: 18))
+                        .foregroundStyle(Color.heading)
+                    Spacer()
+                    Text("Remaining: \(viewModel.budgetRemaining.asCurrency())")
+                        .font(.manrope(.medium, size: 13))
+                        .foregroundStyle(Color.primaryBlue)
+                }
 
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.primaryBlue.opacity(0.12))
-                        .frame(height: 10)
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.primaryBlue)
-                        .frame(width: geo.size.width * viewModel.budgetProgress, height: 10)
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.primaryBlue.opacity(0.12))
+                            .frame(height: 10)
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.primaryBlue)
+                            .frame(width: geo.size.width * viewModel.budgetProgress, height: 10)
+                    }
+                }
+                .frame(height: 10)
+
+                HStack {
+                    Text("SPENT: \(viewModel.budgetSpent.asCurrency())")
+                        .font(.manrope(.medium, size: 12))
+                        .foregroundStyle(Color.mutedText)
+                    Spacer()
+                    Text("GOAL: \(viewModel.budgetGoal.asCurrency())")
+                        .font(.manrope(.medium, size: 12))
+                        .foregroundStyle(Color.mutedText)
                 }
             }
-            .frame(height: 10)
-
-            HStack {
-                Text("SPENT: \(viewModel.budgetSpent.asCurrency())")
-                    .font(.manrope(.medium, size: 12))
-                    .foregroundStyle(Color.mutedText)
-                Spacer()
-                Text("GOAL: \(viewModel.budgetGoal.asCurrency())")
-                    .font(.manrope(.medium, size: 12))
-                    .foregroundStyle(Color.mutedText)
-            }
-        }
-        .padding(20)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+            .padding(20)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
         }
         .buttonStyle(.plain)
     }
 
-
+    // MARK: - Income / Expense Row
     private var incomeExpenseRow: some View {
         HStack(spacing: 16) {
             summaryCard(title: "Income", amount: viewModel.monthlyIncome, isIncome: true)
@@ -215,7 +215,7 @@ struct HomeDashboardView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
-
+    // MARK: - Recent Transactions
     private var recentTransactionsSection: some View {
         VStack(spacing: 12) {
             HStack {
@@ -265,13 +265,13 @@ struct HomeDashboardView: View {
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
-    private func transactionRow(_ transaction: Transaction) -> some View {
+    private func transactionRow(_ transaction: AppTransaction) -> some View {
         HStack(spacing: 16) {
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.primaryBlue.opacity(0.08))
                     .frame(width: 48, height: 48)
-                Image(systemName: transaction.iconName)
+                Image(systemName: transaction.categoryIcon)
                     .font(.system(size: 18))
                     .foregroundStyle(Color.primaryBlue)
             }
@@ -280,14 +280,14 @@ struct HomeDashboardView: View {
                 Text(transaction.title)
                     .font(.manrope(.bold, size: 15))
                     .foregroundStyle(Color.heading)
-                Text("\(transaction.category) • \(transaction.date)")
+                Text("\(transaction.categoryName) • \(formatDate(transaction.date))")
                     .font(.manrope(.regular, size: 12))
                     .foregroundStyle(Color.mutedText)
             }
 
             Spacer()
 
-            Text((transaction.isIncome ? "+" : "-") + transaction.amount.asCurrency())
+            Text((transaction.isIncome ? "+" : "-") + formatCurrency(transaction.amount))
                 .font(.urbanist(.bold, size: 16))
                 .foregroundStyle(transaction.isIncome ? Color.green : Color.errorRose)
         }
@@ -295,7 +295,22 @@ struct HomeDashboardView: View {
         .padding(.vertical, 14)
     }
 
+    // MARK: - Helpers
+    private func formatCurrency(_ value: Double) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencySymbol = "$"
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: value)) ?? "$0.00"
+    }
 
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        return formatter.string(from: date)
+    }
 }
 
 #Preview {
