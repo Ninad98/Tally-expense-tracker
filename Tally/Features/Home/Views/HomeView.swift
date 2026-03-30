@@ -15,7 +15,7 @@ struct HomeView: View {
     var body: some View {
         ZStack(alignment: .bottom) {
             TabView(selection: $selectedTab) {
-                HomeDashboardView(viewModel: homeViewModel)
+                HomeDashboardView(viewModel: homeViewModel, selectedTab: $selectedTab)
                     .tag(0)
                 BudgetView()
                     .tag(1)
