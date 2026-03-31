@@ -109,13 +109,28 @@ struct EditLimitsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    
     private var categoryList: some View {
-        VStack(spacing: 12) {
+        // Attribution: https://developer.apple.com/documentation/swiftui/view/swipeactions(edge:allowsfullswipe:content:)
+        List {
             ForEach($categories) { $category in
                 categoryRow(category: $category)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            categories.removeAll {
+                                $0.id == category.id
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
             }
         }
+        .listStyle(.plain)
+        .scrollDisabled(true)
+        .frame(height: CGFloat(categories.count) * 85) // Size of the category row, currently hardcoded need to see if there's a way to set a dynamic value.
     }
 
     // Attribution: Slight help was used from GenAI to replicate this design UI-wise
