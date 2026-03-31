@@ -9,10 +9,11 @@ import Foundation
 
 struct CategoryLimit: Identifiable {
     let id: String
-    let name: String
-    let description: String
+    var name: String
+    var description: String
     let icon: String
     var limit: Double
+    var isCustom: Bool = false // I added this to differentiate between user custom categories and the default one.
 
     static let defaults: [CategoryLimit] = [
         CategoryLimit(id: "food", name: "Food & Dining", description: "Restaurants, groceries", icon: "fork.knife", limit: 0),

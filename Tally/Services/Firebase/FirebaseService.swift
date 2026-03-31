@@ -72,7 +72,8 @@ final class FirebaseService: FirebaseServiceProtocol {
                         name: item["name"] as? String ?? "",
                         description: item["description"] as? String ?? "",
                         icon: item["icon"] as? String ?? "questionmark",
-                        limit: item["limit"] as? Double ?? 0
+                        limit: item["limit"] as? Double ?? 0,
+                        isCustom: item["isCustom"] as? Bool ?? false
                     )
                     categories.append(category)
                 }
@@ -108,7 +109,8 @@ final class FirebaseService: FirebaseServiceProtocol {
                 "name": cat.name,
                 "description": cat.description,
                 "icon": cat.icon,
-                "limit": cat.limit
+                "limit": cat.limit,
+                "isCustom": cat.isCustom
             ]
         }
 

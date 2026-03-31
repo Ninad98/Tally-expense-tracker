@@ -133,14 +133,25 @@ struct EditLimitsView: View {
                     .foregroundStyle(Color.primaryBlue)
             }
 
-            // Name, Description
+            // Name, Description, isCustom checks if it can be edited or not since it is a user created one.
             VStack(alignment: .leading, spacing: 2) {
-                Text(category.wrappedValue.name)
-                    .font(.manrope(.bold, size: 15))
-                    .foregroundStyle(Color.heading)
-                Text(category.wrappedValue.description)
-                    .font(.manrope(.regular, size: 12))
-                    .foregroundStyle(Color.mutedText)
+                if category.wrappedValue.isCustom {
+                    TextField("Category name", text: category.name)
+                        .font(.manrope(.bold, size: 15))
+                        .foregroundStyle(Color.heading)
+                        .textInputAutocapitalization(.words)
+                    TextField("Description", text: category.description)
+                        .font(.manrope(.regular, size: 12))
+                        .foregroundStyle(Color.mutedText)
+                }
+                else {
+                    Text(category.wrappedValue.name)
+                        .font(.manrope(.bold, size: 15))
+                        .foregroundStyle(Color.heading)
+                    Text(category.wrappedValue.description)
+                        .font(.manrope(.regular, size: 12))
+                        .foregroundStyle(Color.mutedText)
+                }
             }
             Spacer()
             HStack(spacing: 4) {
@@ -231,8 +242,8 @@ struct EditLimitsView: View {
     }
     
     private func addCategory(){
-        print("Button clicked")
-        // TODO: Implement addCategory to add new categoryRow, with editable name, icon and description and amount
+        print("Add Category Button Clicked")
+        categories.append(CategoryLimit(id: UUID().uuidString, name: "Edit Name", description: "Edit Description", icon: "pencil", limit: 0, isCustom: true))
     }
 
 }
