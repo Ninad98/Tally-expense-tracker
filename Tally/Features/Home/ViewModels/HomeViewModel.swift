@@ -38,12 +38,15 @@ final class HomeViewModel: ObservableObject {
 
     func loadData() {
         isLoading = true
+        // https://firebase.google.com/docs/auth/ios/manage-users#swift_1
+        // To get current authenticated user.
         guard let uid = Auth.auth().currentUser?.uid else {
             isLoading = false
             return
         }
 
         Task {
+            // Fetches user's full name and active budget from Firebase.
             async let name = firebaseService.fetchUserFullName(uid: uid)
             async let recent = firebaseService.fetchRecentTransactions(uid: uid, limit: 5)
             async let monthly = firebaseService.fetchMonthlyTransactions(uid: uid)

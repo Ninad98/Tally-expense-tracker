@@ -109,13 +109,28 @@ struct EditLimitsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 
-    
     private var categoryList: some View {
-        VStack(spacing: 12) {
+        // Attribution: https://developer.apple.com/documentation/swiftui/view/swipeactions(edge:allowsfullswipe:content:)
+        List {
             ForEach($categories) { $category in
                 categoryRow(category: $category)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            categories.removeAll {
+                                $0.id == category.id
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
             }
         }
+        .listStyle(.plain)
+        .scrollDisabled(true)
+        .frame(height: CGFloat(categories.count) * 85) // Size of the category row, currently hardcoded need to see if there's a way to set a dynamic value.
     }
 
     // Attribution: Slight help was used from GenAI to replicate this design UI-wise
@@ -133,14 +148,25 @@ struct EditLimitsView: View {
                     .foregroundStyle(Color.primaryBlue)
             }
 
-            // Name, Description
+            // Name, Description, isCustom checks if it can be edited or not since it is a user created one.
             VStack(alignment: .leading, spacing: 2) {
-                Text(category.wrappedValue.name)
-                    .font(.manrope(.bold, size: 15))
-                    .foregroundStyle(Color.heading)
-                Text(category.wrappedValue.description)
-                    .font(.manrope(.regular, size: 12))
-                    .foregroundStyle(Color.mutedText)
+                if category.wrappedValue.isCustom {
+                    TextField("Category name", text: category.name)
+                        .font(.manrope(.bold, size: 15))
+                        .foregroundStyle(Color.heading)
+                        .textInputAutocapitalization(.words)
+                    TextField("Description", text: category.description)
+                        .font(.manrope(.regular, size: 12))
+                        .foregroundStyle(Color.mutedText)
+                }
+                else {
+                    Text(category.wrappedValue.name)
+                        .font(.manrope(.bold, size: 15))
+                        .foregroundStyle(Color.heading)
+                    Text(category.wrappedValue.description)
+                        .font(.manrope(.regular, size: 12))
+                        .foregroundStyle(Color.mutedText)
+                }
             }
             Spacer()
             HStack(spacing: 4) {
@@ -161,18 +187,23 @@ struct EditLimitsView: View {
     }
 
     // TODO: Button should allow user to create a new category, select icon, and description.
+    // TODO: Also allow user to delete his defined category by swiping left to delete.
     private var addCategoryButton: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "plus")
-                .font(.system(size: 14, weight: .semibold))
-            Text("Add New Category")
-                .font(.manrope(.bold, size: 14))
+        Button{
+            addCategory()
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "plus")
+                    .font(.system(size: 14, weight: .semibold))
+                Text("Add New Category")
+                    .font(.manrope(.bold, size: 14))
+            }
+            .foregroundStyle(Color.mutedText)
+            .frame(maxWidth: .infinity)
+            .frame(height: 52)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
         }
-        .foregroundStyle(Color.mutedText)
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
     private var saveButton: some View {
@@ -223,6 +254,11 @@ struct EditLimitsView: View {
                 }
             }
         }
+    }
+    
+    private func addCategory(){
+        print("Add Category Button Clicked")
+        categories.append(CategoryLimit(id: UUID().uuidString, name: "Edit Name", description: "Edit Description", icon: "pencil", limit: 0, isCustom: true))
     }
 
 }
