@@ -54,7 +54,6 @@ struct AddTransactionView: View {
         .onAppear { viewModel.loadCategories() }
     }
 
-    // MARK: - Navigation Bar
 
     private var navigationBar: some View {
         HStack {
@@ -79,7 +78,6 @@ struct AddTransactionView: View {
         .background(Color.pageBG)
     }
 
-    // MARK: - Type Toggle
 
     private var typeToggle: some View {
         HStack(spacing: 0) {
@@ -110,7 +108,6 @@ struct AddTransactionView: View {
         )
     }
 
-    // MARK: - Amount Field
 
     private var amountField: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -158,7 +155,6 @@ struct AddTransactionView: View {
         }
     }
 
-    // MARK: - Title Field
 
     private var titleField: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -210,7 +206,6 @@ struct AddTransactionView: View {
         }
     }
 
-    // MARK: - Category Picker
 
     private var categoryPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -255,7 +250,6 @@ struct AddTransactionView: View {
         }
     }
 
-    // MARK: - Date Picker
 
     private var datePicker: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -279,7 +273,6 @@ struct AddTransactionView: View {
         }
     }
 
-    // MARK: - Note Field
 
     private var noteField: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -313,7 +306,6 @@ struct AddTransactionView: View {
         }
     }
 
-    // MARK: - Save Button
 
     private var saveButton: some View {
         Button {
