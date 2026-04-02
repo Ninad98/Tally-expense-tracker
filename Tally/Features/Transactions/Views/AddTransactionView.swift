@@ -42,7 +42,7 @@ struct AddTransactionView: View {
                                 .padding(.leading, 4)
                         }
 
-                        saveButton
+                        saveButton // took alignment and UI design help from Claude AI
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -51,6 +51,7 @@ struct AddTransactionView: View {
             }
         }
         .preferredColorScheme(.light)
+        //loading users budget categories from DB here
         .onAppear { viewModel.loadCategories() }
     }
 
@@ -75,7 +76,7 @@ struct AddTransactionView: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .background(Color.pageBG)
+        .background(Color.pageBG) // took alignment and UI design help from Claude AI
     }
 
 
@@ -95,7 +96,7 @@ struct AddTransactionView: View {
                         .background(
                             viewModel.transactionType == type ? Color.primaryBlue : Color.clear
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))// took alignment and UI design help from Claude AI
                 }
             }
         }
@@ -105,7 +106,7 @@ struct AddTransactionView: View {
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(Color.cardBorder, lineWidth: 1)
-        )
+        )// took alignment and UI design help from Claude AI
     }
 
 
@@ -127,7 +128,7 @@ struct AddTransactionView: View {
                     .keyboardType(.decimalPad)
                     .onChange(of: viewModel.amountText) { _, _ in
                         if viewModel.amountError != nil { viewModel.amountError = nil }
-                    }
+                    } // took alignment and UI design help from Claude AI
 
                 if viewModel.amountError != nil {
                     Image(systemName: "exclamationmark.circle")
@@ -143,7 +144,7 @@ struct AddTransactionView: View {
                     .stroke(
                         viewModel.amountError != nil ? Color.errorRose : Color.cardBorder,
                         lineWidth: viewModel.amountError != nil ? 1.5 : 1
-                    )
+                    )// took alignment and UI design help from Claude AI
             )
 
             if let error = viewModel.amountError {
@@ -195,7 +196,7 @@ struct AddTransactionView: View {
                         viewModel.titleError != nil ? Color.errorRose : Color.cardBorder,
                         lineWidth: viewModel.titleError != nil ? 1.5 : 1
                     )
-            )
+            )// took alignment and UI design help from Claude AI
 
             if let error = viewModel.titleError {
                 Label(error, systemImage: "exclamationmark.circle")
@@ -234,7 +235,7 @@ struct AddTransactionView: View {
                         .background(
                             viewModel.selectedCategoryId == category.id
                                 ? Color.primaryBlue : Color.white
-                        )
+                        )// took alignment and UI design help from Claude AI
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
@@ -242,7 +243,7 @@ struct AddTransactionView: View {
                                     viewModel.selectedCategoryId == category.id
                                         ? Color.primaryBlue : Color.cardBorder,
                                     lineWidth: 1
-                                )
+                                )// took alignment and UI design help from Claude AI
                         )
                     }
                 }
@@ -268,7 +269,7 @@ struct AddTransactionView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.cardBorder, lineWidth: 1)
+                        .stroke(Color.cardBorder, lineWidth: 1)// took alignment and UI design help from Claude AI
                 )
         }
     }
@@ -301,7 +302,7 @@ struct AddTransactionView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.cardBorder, lineWidth: 1)
+                    .stroke(Color.cardBorder, lineWidth: 1)// took alignment and UI design help from Claude AI
             )
         }
     }
@@ -327,7 +328,7 @@ struct AddTransactionView: View {
             .frame(height: 60)
             .background(Color.primaryBlue)
             .clipShape(RoundedRectangle(cornerRadius: 24))
-            .shadow(color: Color.primaryBlue.opacity(0.25), radius: 15, x: 0, y: 10)
+            .shadow(color: Color.primaryBlue.opacity(0.25), radius: 15, x: 0, y: 10)// took alignment and UI design help from Claude AI
         }
         .disabled(viewModel.isLoading)
     }

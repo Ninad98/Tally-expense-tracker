@@ -15,7 +15,7 @@ struct ProfileView: View {
             VStack(spacing: 12) {
                 Image(systemName: "person.circle")
                     .font(.system(size: 48))
-                    .foregroundStyle(Color.primaryBlue.opacity(0.4))
+                    .foregroundStyle(Color.primaryBlue.opacity(0.4)) //used existing code from Insights View screen 
                 Text("Profile")
                     .font(.urbanist(.bold, size: 24))
                     .foregroundStyle(Color.heading)
