@@ -36,7 +36,7 @@ struct HomeDashboardView: View {
         }
     }
 
-
+    // Scrollable container for all dashboard sections.
     private var content: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
@@ -51,7 +51,7 @@ struct HomeDashboardView: View {
             .padding(.bottom, 100)
         }
     }
-
+    // Displays the user's profile avatar,display his name from firebase
     private var headerRow: some View {
         HStack(spacing: 12) {
             ZStack {
@@ -62,7 +62,7 @@ struct HomeDashboardView: View {
                     .font(.system(size: 20))
                     .foregroundStyle(Color.primaryBlue)
             }
-
+            //show a - if name is unable to fetch
             VStack(alignment: .leading, spacing: 2) {
                 Text("Welcome back,")
                     .font(.manrope(.regular, size: 13))
@@ -73,7 +73,8 @@ struct HomeDashboardView: View {
             }
 
             Spacer()
-
+            
+            // code to do in future for notifications
             Button {
                 // TODO: Notifications
             } label: {
@@ -89,7 +90,8 @@ struct HomeDashboardView: View {
             }
         }
     }
-
+    
+    //This is for showing total balance
     private var balanceCard: some View {
         VStack(spacing: 12) {
             Text("Total Balance")
@@ -115,7 +117,7 @@ struct HomeDashboardView: View {
                 )
                 .clipShape(Capsule())
             } else {
-                Text("No data yet")
+                Text("No data yet") //Shown for users with no transactions
                     .font(.manrope(.medium, size: 13))
                     .foregroundStyle(Color.mutedText)
                     .padding(.horizontal, 14)
@@ -128,7 +130,7 @@ struct HomeDashboardView: View {
         .padding(.vertical, 24)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
     }
 
     private var budgetSection: some View {
@@ -173,7 +175,7 @@ struct HomeDashboardView: View {
             .padding(20)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 20))
-            .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+            .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
         }
         .buttonStyle(.plain)
     }
@@ -208,7 +210,7 @@ struct HomeDashboardView: View {
         .padding(20)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
     }
 
     private var recentTransactionsSection: some View {
@@ -219,7 +221,7 @@ struct HomeDashboardView: View {
                     .foregroundStyle(Color.heading)
                 Spacer()
                 Button("See All") {
-                    // TODO: Navigate to all transactions
+                    // todo: maybe have a new screen to show all transactions
                 }
                 .font(.manrope(.bold, size: 14))
                 .foregroundStyle(Color.primaryBlue)
@@ -239,11 +241,11 @@ struct HomeDashboardView: View {
                 }
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+                .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
             }
         }
     }
-
+    // this is for no transactions
     private var emptyTransactions: some View {
         VStack(spacing: 12) {
             Image(systemName: "tray")
@@ -257,7 +259,7 @@ struct HomeDashboardView: View {
         .padding(.vertical, 40)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
+        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
     }
 
     private func transactionRow(_ transaction: AppTransaction) -> some View {
@@ -277,7 +279,7 @@ struct HomeDashboardView: View {
                     .foregroundStyle(Color.heading)
                 Text("\(transaction.categoryName) • \(formatDate(transaction.date))")
                     .font(.manrope(.regular, size: 12))
-                    .foregroundStyle(Color.mutedText)
+                    .foregroundStyle(Color.mutedText)// took alignment and UI design help from Claude AI
             }
 
             Spacer()
@@ -287,7 +289,7 @@ struct HomeDashboardView: View {
                 .foregroundStyle(transaction.isIncome ? Color.green : Color.errorRose)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.vertical, 14)// took alignment and UI design help from Claude AI
     }
 
     private func formatCurrency(_ value: Double) -> String {
