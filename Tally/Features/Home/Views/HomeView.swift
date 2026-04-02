@@ -36,7 +36,6 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Custom Tab Bar
 
     private var customTabBar: some View {
         ZStack {
