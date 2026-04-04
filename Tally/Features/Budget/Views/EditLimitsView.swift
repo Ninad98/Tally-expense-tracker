@@ -8,6 +8,10 @@
 import FirebaseAuth
 import SwiftUI
 
+private struct IconPickerContext: Identifiable {
+    let id: String
+}
+
 struct EditLimitsView: View {
 
     let existingBudget: Budget?
@@ -17,6 +21,7 @@ struct EditLimitsView: View {
     @State private var categories: [CategoryLimit] = []
     @State private var isSaving = false
     @State private var errorMessage: String?
+    @State private var iconPickerContext: IconPickerContext?
 
     private let firebaseService: FirebaseServiceProtocol
 
@@ -26,6 +31,21 @@ struct EditLimitsView: View {
         self.firebaseService = firebaseService
         // Initialize with the existing budget's category limits, or fallback to the default values defined if there is none.
         _categories = State(initialValue: existingBudget?.categoryLimits ?? CategoryLimit.defaults)
+    }
+
+    // Attribution: https://developer.apple.com/documentation/swiftui/binding
+    // This binds the category limit to the id of the category.
+    private func binding(for categoryId: String) -> Binding<CategoryLimit> {
+        Binding(
+            get: {
+                categories.first(where: { $0.id == categoryId })!
+            },
+            set: { newValue in
+                if let index = categories.firstIndex(where: { $0.id == categoryId }) {
+                    categories[index] = newValue
+                }
+            }
+        )
     }
 
     // Calculates the total monthly budget by summing up the limits of all categories.
@@ -59,6 +79,17 @@ struct EditLimitsView: View {
             }
         }
         .background(Color.pageBG.ignoresSafeArea())
+        .sheet(item: $iconPickerContext) { context in
+            CategoryIconPickerSheet(
+                selectedSymbol: categories.first(where: { $0.id == context.id })?.icon ?? "pencil",
+                onPick: { symbol in
+                    if let index = categories.firstIndex(where: { $0.id == context.id }) {
+                        categories[index].icon = symbol
+                    }
+                    iconPickerContext = nil
+                }
+            )
+        }
     }
 
     // Header section in Edit limits sheet, which contains back dismisss button, title and reset button.
@@ -112,20 +143,25 @@ struct EditLimitsView: View {
     private var categoryList: some View {
         // Attribution: https://developer.apple.com/documentation/swiftui/view/swipeactions(edge:allowsfullswipe:content:)
         List {
-            ForEach($categories) { $category in
-                categoryRow(category: $category)
-                    .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            categories.removeAll {
-                                $0.id == category.id
-                            }
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
+            ForEach(categories, id: \.id) { category in
+                categoryRow(
+                    category: binding(for: category.id),
+                    onTapIcon: {
+                        iconPickerContext = IconPickerContext(id: category.id)
                     }
+                )
+                .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                    Button(role: .destructive) {
+                        categories.removeAll { 
+                            $0.id == category.id
+                            }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
             }
         }
         .listStyle(.plain)
@@ -135,17 +171,41 @@ struct EditLimitsView: View {
 
     // Attribution: Slight help was used from GenAI to replicate this design UI-wise
     // From the figma design.
-    private func categoryRow(category: Binding<CategoryLimit>) -> some View {
+    private func categoryRow(category: Binding<CategoryLimit>, onTapIcon: @escaping () -> Void) -> some View {
         HStack(spacing: 12) {
-            
-            // For the icon to be popped out on the z-axis.
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.primaryBlue.opacity(0.08))
-                    .frame(width: 40, height: 40)
-                Image(systemName: category.wrappedValue.icon)
-                    .font(.system(size: 16))
-                    .foregroundStyle(Color.primaryBlue)
+
+            Group {
+                if category.wrappedValue.isCustom {
+                    Button(action: onTapIcon) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.primaryBlue.opacity(0.08))
+                                .frame(width: 40, height: 40)
+                            Image(systemName: category.wrappedValue.icon)
+                                .font(.system(size: 16))
+                                .foregroundStyle(Color.primaryBlue)
+                        }
+                        .overlay(alignment: .bottomTrailing) {
+                            Image(systemName: "chevron.down.circle.fill")
+                                .font(.system(size: 11))
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.white, Color.primaryBlue)
+                                .offset(x: 3, y: 3)
+                        }
+                        .frame(width: 40, height: 40)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    // For the icon to be popped out on the z-axis.
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.primaryBlue.opacity(0.08))
+                            .frame(width: 40, height: 40)
+                        Image(systemName: category.wrappedValue.icon)
+                            .font(.system(size: 16))
+                            .foregroundStyle(Color.primaryBlue)
+                    }
+                }
             }
 
             // Name, Description, isCustom checks if it can be edited or not since it is a user created one.
@@ -186,8 +246,6 @@ struct EditLimitsView: View {
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
 
-    // TODO: Button should allow user to create a new category, select icon, and description.
-    // TODO: Also allow user to delete his defined category by swiping left to delete.
     private var addCategoryButton: some View {
         Button{
             addCategory()
