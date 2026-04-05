@@ -274,10 +274,18 @@ struct HomeDashboardView: View {
             }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(transaction.title)
-                    .font(.manrope(.bold, size: 15))
-                    .foregroundStyle(Color.heading)
-                Text("\(transaction.categoryName) • \(formatDate(transaction.date))")
+                // Added an HStack to display the recurring icon indication in recent transactions if it was a recurring one.
+                HStack(spacing: 6) {
+                    Text(transaction.title)
+                        .font(.manrope(.bold, size: 15))
+                        .foregroundStyle(Color.heading)
+                    if transaction.isRecurring, !transaction.isIncome {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(Color.primaryBlue)
+                    }
+                }
+                Text(recurringTransactionSubtitle(transaction))
                     .font(.manrope(.regular, size: 12))
                     .foregroundStyle(Color.mutedText)// took alignment and UI design help from Claude AI
             }
@@ -290,6 +298,16 @@ struct HomeDashboardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)// took alignment and UI design help from Claude AI
+    }
+
+    // This appends Monthly in the subtitle of a transaction if it was a recurring one.
+    private func recurringTransactionSubtitle(_ transaction: AppTransaction) -> String {
+        var parts: [String] = [transaction.categoryName]
+        if transaction.isRecurring, !transaction.isIncome {
+            parts.append("Monthly")
+        }
+        parts.append(formatDate(transaction.date))
+        return parts.joined(separator: " • ")
     }
 
     private func formatCurrency(_ value: Double) -> String {
