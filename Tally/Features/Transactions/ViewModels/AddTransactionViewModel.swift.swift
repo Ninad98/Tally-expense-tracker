@@ -17,6 +17,7 @@ final class AddTransactionViewModel: ObservableObject {
     @Published var transactionType: TransactionType = .expense
     @Published var date: Date = Date()
     @Published var note: String = ""
+    @Published var isRecurringExpense: Bool = false
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var categories: [CategoryLimit] = []
@@ -69,6 +70,8 @@ final class AddTransactionViewModel: ObservableObject {
         }
 
         let category = selectedCategory ?? CategoryLimit.defaults[0]
+        // isRecurring is set to true when the transaction is an expense and when the recurring toggle is on.
+        let isRecurring = transactionType == .expense && isRecurringExpense
 
         isLoading = true
         Task {
@@ -82,7 +85,8 @@ final class AddTransactionViewModel: ObservableObject {
                     categoryIcon: category.icon,
                     type: transactionType,
                     date: date,
-                    note: note.trimmingCharacters(in: .whitespacesAndNewlines)
+                    note: note.trimmingCharacters(in: .whitespacesAndNewlines),
+                    isRecurring: isRecurring
                 )
                 await MainActor.run {
                     isLoading = false
