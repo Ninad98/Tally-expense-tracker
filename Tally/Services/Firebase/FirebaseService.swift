@@ -152,7 +152,7 @@ final class FirebaseService: FirebaseServiceProtocol {
         let ref = db.collection("users").document(uid)
             .collection("transactions").document()
 
-        let data: [String: Any] = [
+        var data: [String: Any] = [
             "title": title,
             "amount": amount,
             "categoryId": categoryId,
@@ -164,8 +164,18 @@ final class FirebaseService: FirebaseServiceProtocol {
             "isRecurring": isRecurring,
             "createdAt": FieldValue.serverTimestamp()
         ]
+        if isRecurring {
+            data["isRecurringPaused"] = false
+        }
 
         try await ref.setData(data)
+    }
+
+    func updateTransactionRecurringPaused(uid: String, transactionId: String, paused: Bool) async throws {
+        let db = Firestore.firestore()
+        let ref = db.collection("users").document(uid)
+            .collection("transactions").document(transactionId)
+        try await ref.updateData(["isRecurringPaused": paused])
     }
 
     func fetchRecentTransactions(uid: String, limit: Int) async -> [AppTransaction] {
@@ -220,6 +230,8 @@ final class FirebaseService: FirebaseServiceProtocol {
         else { return nil }
 
         let isRecurring = data["isRecurring"] as? Bool ?? false
+        let isRecurringPaused = (data["isRecurringPaused"] as? Bool)
+            ?? (data["recurringPaused"] as? Bool) ?? false
 
         return AppTransaction(
             id: doc.documentID,
@@ -232,7 +244,8 @@ final class FirebaseService: FirebaseServiceProtocol {
             date: dateTimestamp.dateValue(),
             note: data["note"] as? String ?? "",
             createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? dateTimestamp.dateValue(),
-            isRecurring: isRecurring
+            isRecurring: isRecurring,
+            isRecurringPaused: isRecurringPaused
         )
     }
 }
