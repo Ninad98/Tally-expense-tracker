@@ -145,7 +145,8 @@ final class FirebaseService: FirebaseServiceProtocol {
         categoryIcon: String,
         type: TransactionType,
         date: Date,
-        note: String
+        note: String,
+        isRecurring: Bool
     ) async throws {
         let db = Firestore.firestore()
         let ref = db.collection("users").document(uid)
@@ -160,6 +161,7 @@ final class FirebaseService: FirebaseServiceProtocol {
             "type": type.rawValue,
             "date": Timestamp(date: date),
             "note": note,
+            "isRecurring": isRecurring,
             "createdAt": FieldValue.serverTimestamp()
         ]
 
@@ -217,6 +219,8 @@ final class FirebaseService: FirebaseServiceProtocol {
             let dateTimestamp = data["date"] as? Timestamp
         else { return nil }
 
+        let isRecurring = data["isRecurring"] as? Bool ?? false
+
         return AppTransaction(
             id: doc.documentID,
             title: title,
@@ -227,7 +231,8 @@ final class FirebaseService: FirebaseServiceProtocol {
             type: type,
             date: dateTimestamp.dateValue(),
             note: data["note"] as? String ?? "",
-            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? dateTimestamp.dateValue()
+            createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? dateTimestamp.dateValue(),
+            isRecurring: isRecurring
         )
     }
 }

@@ -29,6 +29,7 @@ struct AddTransactionView: View {
 
                         if viewModel.transactionType == .expense {
                             categoryPicker
+                            recurringExpenseSection
                         }
 
                         datePicker
@@ -53,6 +54,12 @@ struct AddTransactionView: View {
         .preferredColorScheme(.light)
         //loading users budget categories from DB here
         .onAppear { viewModel.loadCategories() }
+        // This is to hide the recurring toggle when transaction type is income.
+        .onChange(of: viewModel.transactionType) { _, newType in
+            if newType == .income {
+                viewModel.isRecurringExpense = false
+            }
+        }
     }
 
 
@@ -207,6 +214,36 @@ struct AddTransactionView: View {
         }
     }
 
+
+    // Adds a toggle for recurring expense indication
+    private var recurringExpenseSection: some View {
+        // Hstack that has icon, title text and toggle.
+        HStack(alignment: .center, spacing: 12) {
+            Image("recurring-expense")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 22, height: 22)
+                .accessibilityHidden(true)
+
+            Text("Recurring expense")
+                .font(.manrope(.bold, size: 15))
+                .foregroundStyle(Color.heading)
+
+            Spacer(minLength: 8)
+
+            Toggle("", isOn: $viewModel.isRecurringExpense)
+                .labelsHidden()
+                .tint(Color.primaryBlue)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.cardBorder, lineWidth: 1)
+        )
+    }
 
     private var categoryPicker: some View {
         VStack(alignment: .leading, spacing: 10) {
