@@ -31,7 +31,8 @@ protocol FirebaseServiceProtocol {
         categoryIcon: String,
         type: TransactionType,
         date: Date,
-        note: String
+        note: String,
+        isRecurring: Bool
     ) async throws
 
     func fetchRecentTransactions(uid: String, limit: Int) async -> [AppTransaction]
