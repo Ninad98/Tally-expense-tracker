@@ -64,6 +64,12 @@ final class BudgetViewModel: ObservableObject {
             .reduce(0) { $0 + $1.amount }
     }
 
+    var activeRecurringSubscriptionCount: Int {
+        let recurring = monthlyTransactions.filter { $0.isRecurring && !$0.isIncome }
+        let keys = Set(recurring.map { "\($0.title)|\($0.categoryId)" })
+        return keys.count
+    }
+
     func loadBudget() {
         isLoading = true
         Task {
