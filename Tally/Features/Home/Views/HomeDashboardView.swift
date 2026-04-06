@@ -282,7 +282,8 @@ struct HomeDashboardView: View {
                     if transaction.isRecurring, !transaction.isIncome {
                         Image(systemName: "repeat")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(Color.primaryBlue)
+                            // Change the icon color to mutedText if the recurring transaction is paused.
+                            .foregroundStyle(transaction.isRecurringPaused ? Color.mutedText : Color.primaryBlue)
                     }
                 }
                 Text(recurringTransactionSubtitle(transaction))
@@ -300,11 +301,11 @@ struct HomeDashboardView: View {
         .padding(.vertical, 14)// took alignment and UI design help from Claude AI
     }
 
-    // This appends Monthly in the subtitle of a transaction if it was a recurring one.
+    // This appends Monthly or Paused in the subtitle of a transaction if it was a recurring one.
     private func recurringTransactionSubtitle(_ transaction: AppTransaction) -> String {
         var parts: [String] = [transaction.categoryName]
         if transaction.isRecurring, !transaction.isIncome {
-            parts.append("Monthly")
+            parts.append(transaction.isRecurringPaused ? "Paused" : "Monthly")
         }
         parts.append(formatDate(transaction.date))
         return parts.joined(separator: " • ")

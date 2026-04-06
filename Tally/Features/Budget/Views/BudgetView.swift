@@ -16,6 +16,7 @@ struct BudgetView: View {
 
     @StateObject private var viewModel = BudgetViewModel()
     @State private var showEditLimits = false
+    @State private var showRecurringPayments = false
 
     var body: some View {
         ZStack {
@@ -36,6 +37,12 @@ struct BudgetView: View {
                 onSave: { viewModel.loadBudget() }
             )
         }
+        .sheet(isPresented: $showRecurringPayments) {
+            RecurringPaymentsSheet(viewModel: viewModel)
+                .presentationDetents([.medium, .large])
+                .presentationBackground(Color.pageBG)
+                .presentationDragIndicator(.visible)
+        }
     }
 
     private var budgetContent: some View {
@@ -43,6 +50,7 @@ struct BudgetView: View {
             VStack(spacing: 20) {
                 headerSection
                 summaryCard
+                recurringPaymentsCard
                 categoryBreakdown
                 actionButtons
             }
@@ -67,7 +75,57 @@ struct BudgetView: View {
         }
     }
 
-    
+
+    private var recurringPaymentsCard: some View {
+        Button {
+            showRecurringPayments = true
+        } label: {
+            HStack(alignment: .center, spacing: 14) {
+                // To make the icon pop out on the button.
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.22))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "arrow.left.arrow.right")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Recurring Payments")
+                        .font(.manrope(.bold, size: 16))
+                        .foregroundStyle(.white)
+                    Text(recurringPaymentsSubtitle)
+                        .font(.manrope(.medium, size: 13))
+                        .foregroundStyle(.white.opacity(0.88))
+                        .multilineTextAlignment(.leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.9))
+            }
+            .padding(.horizontal, 18)
+            .padding(.vertical, 16)
+            .background(Color.primaryBlue)
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // Since the count is dynamic we calculate the subtitle based on the count.
+    private var recurringPaymentsSubtitle: String {
+        let n = viewModel.activeRecurringSubscriptionCount
+        if n == 0 {
+            return "No active subscriptions"
+        }
+        else if n == 1 {
+            return "Manage your active subscription"
+        }
+        return "Manage your \(n) active subscriptions"
+    }
+
     private var summaryCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
