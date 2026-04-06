@@ -65,9 +65,54 @@ final class BudgetViewModel: ObservableObject {
     }
 
     var activeRecurringSubscriptionCount: Int {
-        let recurring = monthlyTransactions.filter { $0.isRecurring && !$0.isIncome }
+        let recurring = monthlyTransactions.filter { $0.isRecurring && !$0.isIncome && !$0.isRecurringPaused }
         let keys = Set(recurring.map { "\($0.title)|\($0.categoryId)" })
         return keys.count
+    }
+
+    // This sums the amount of all recurring expenses that are not paused.
+    var totalActiveRecurringAmount: Double {
+        monthlyTransactions
+            .filter { $0.isRecurring && !$0.isIncome && !$0.isRecurringPaused }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    // Calculates next due date for recurring expense.
+    var nextActiveRecurringPaymentDate: Date? {
+        let active = monthlyTransactions.filter { $0.isRecurring && !$0.isIncome && !$0.isRecurringPaused }
+        let nextDates = active.map {
+            Date.nextRecurringDueDate(fromAnchor: $0.date, includeSameDayAsReference: false)
+        }
+        return nextDates.min()
+    }
+
+    // To display the recurring expenses only in the recurring sheet.
+    var recurringExpenseTransactions: [AppTransaction] {
+        monthlyTransactions
+            .filter { $0.isRecurring && !$0.isIncome }
+            .sorted { $0.date > $1.date }
+    }
+
+    // This toggles the recurring expense between paused and unpaused.
+    func setRecurringPaused(transactionId: String, paused: Bool) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        Task {
+            do {
+                try await firebaseService.updateTransactionRecurringPaused(
+                    uid: uid,
+                    transactionId: transactionId,
+                    paused: paused
+                )
+                let transactions = await firebaseService.fetchMonthlyTransactions(uid: uid)
+                await MainActor.run {
+                    monthlyTransactions = transactions
+                }
+            } catch {
+                await MainActor.run {
+                    print("Failed to updating recurring expense status.")
+                }
+            }
+        }
     }
 
     func loadBudget() {
