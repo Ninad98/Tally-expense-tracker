@@ -38,19 +38,10 @@ struct BudgetView: View {
             )
         }
         .sheet(isPresented: $showRecurringPayments) {
-            NavigationStack {
-                Text("Recurring payments")
-                    .font(.manrope(.medium, size: 15))
-                    .foregroundStyle(Color.mutedText)
-                    .navigationTitle("Recurring Payments")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Close") { showRecurringPayments = false }
-                        }
-                    }
-            }
-            .presentationDetents([.medium, .large])
+            RecurringPaymentsSheet(viewModel: viewModel)
+                .presentationDetents([.medium, .large])
+                .presentationBackground(Color.pageBG)
+                .presentationDragIndicator(.visible)
         }
     }
 
