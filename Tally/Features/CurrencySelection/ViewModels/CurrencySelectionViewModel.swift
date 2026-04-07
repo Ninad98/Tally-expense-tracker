@@ -39,6 +39,7 @@ final class CurrencySelectionViewModel: NSObject, ObservableObject {
         }
     }
 
+    // Gets coordinates from location and matches it to currency.
     private func reverseGeocode(location: CLLocation) {
         guard let request = MKReverseGeocodingRequest(location: location) else {
             isDetecting = false
@@ -64,18 +65,21 @@ final class CurrencySelectionViewModel: NSObject, ObservableObject {
     }
 }
 
-// MARK: - CLLocationManagerDelegate
 
 extension CurrencySelectionViewModel: CLLocationManagerDelegate {
 
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:
+            guard isDetecting else { return }
             manager.requestLocation()
         case .denied, .restricted:
             DispatchQueue.main.async {
+                let wasTrying = self.isDetecting
                 self.isDetecting = false
-                self.detectionError = "Location access denied. Please enable it in Settings."
+                if wasTrying {
+                    self.detectionError = "Location access denied. Please enable it in Settings."
+                }
             }
         default:
             break

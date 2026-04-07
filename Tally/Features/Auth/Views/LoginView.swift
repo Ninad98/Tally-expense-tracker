@@ -4,27 +4,31 @@
 //
 //  Created by Ninad Mankar on 3/20/26.
 //
+// Updated by Mazen Tarek on 3/27/26.
+//
 
 import SwiftUI
 
 struct LoginView: View {
 
     let onLoginSuccess: () -> Void
+    let onSignUp: () -> Void
     @StateObject private var viewModel = LoginViewModel()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
 
-                // MARK: - Header
+
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(Color.primaryBlue.opacity(0.1))
                             .frame(width: 72, height: 72)
-                        Image(systemName: "lock.square.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(.blue)
+                        Image("Icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 36, height: 36)
                     }
 
                     Text("Welcome Back")
@@ -37,7 +41,7 @@ struct LoginView: View {
                 }
                 .padding(.top, 48)
 
-                // MARK: - Form
+
                 VStack(spacing: 16) {
 
                     // Email Field
@@ -51,9 +55,10 @@ struct LoginView: View {
                                 .foregroundColor(.secondary)
                             TextField("name@example.com", text: $viewModel.email)
                                 .keyboardType(.emailAddress)
-                                .autocapitalization(.none)
+                                .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
-                                .onChange(of: viewModel.email) { _ in
+                                .onChange(of: viewModel.email) { _, _ in
+                                    viewModel.authError = nil
                                     if viewModel.emailError != nil { viewModel.validateEmail() }
                                 }
                             if viewModel.emailError != nil {
@@ -87,7 +92,7 @@ struct LoginView: View {
                                 .foregroundColor(.secondary)
                             if viewModel.isPasswordVisible {
                                 TextField("...............", text: $viewModel.password)
-                                    .autocapitalization(.none)
+                                    .textInputAutocapitalization(.never)
                                     .autocorrectionDisabled()
                             } else {
                                 SecureField("...............", text: $viewModel.password)
@@ -106,7 +111,8 @@ struct LoginView: View {
                                 .stroke(viewModel.passwordError != nil ? Color.red : Color(.systemGray4), lineWidth: 1.5)
                         )
                         .cornerRadius(12)
-                        .onChange(of: viewModel.password) { _ in
+                        .onChange(of: viewModel.password) { _, _ in
+                            viewModel.authError = nil
                             if viewModel.passwordError != nil { viewModel.validatePassword() }
                         }
 
@@ -129,7 +135,14 @@ struct LoginView: View {
                 }
                 .padding(.horizontal)
 
-                // MARK: - Login Button
+                if let authError = viewModel.authError {
+                    Label(authError, systemImage: "exclamationmark.circle")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                }
+
                 Button {
                     viewModel.login(onSuccess: onLoginSuccess)
                 } label: {
@@ -150,71 +163,27 @@ struct LoginView: View {
                 .padding(.horizontal)
                 .disabled(viewModel.isLoading)
 
-                // MARK: - Social Login
-                VStack(spacing: 16) {
-                    HStack {
-                        line
-                        Text("OR CONTINUE WITH")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        line
-                    }
-                    .padding(.horizontal)
 
-                    HStack(spacing: 16) {
-                        // Google Button
-                        Button {
-                            // TODO: Google sign-in
-                        } label: {
-                            HStack(spacing: 8) {
-                                GoogleIcon()
-                                Text("Google")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.primary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(Color(.systemBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(.systemGray4), lineWidth: 1.5)
-                            )
-                            .cornerRadius(12)
-                        }
-
-                        // Apple Button
-                        Button {
-                            // TODO: Apple sign-in
-                        } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "applelogo")
-                                    .font(.system(size: 18, weight: .medium))
-                                    .foregroundColor(.primary)
-                                Text("Apple")
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .foregroundColor(.primary)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 48)
-                            .background(Color(.systemBackground))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(.systemGray4), lineWidth: 1.5)
-                            )
-                            .cornerRadius(12)
+                AuthSocialLoginBlock(onGoogle: {
+                    Task {
+                        do {
+                            try await Authentication().googleOauth()
+                            onLoginSuccess()
+                        } catch AuthenticationError.runtimeError(let errorMessage) {
+                            viewModel.authError = errorMessage
+                        } catch {
+                            print(error.localizedDescription)
                         }
                     }
+                })
                     .padding(.horizontal)
-                }
 
-                // MARK: - Sign Up
+
                 HStack(spacing: 4) {
                     Text("Don't have an account?")
                         .foregroundColor(.secondary)
                     Button("Sign Up") {
-                        // TODO: Navigate to sign up
+                        onSignUp()
                     }
                     .foregroundColor(.blue)
                     .fontWeight(.semibold)
@@ -225,32 +194,8 @@ struct LoginView: View {
         }
         .background(Color(.systemGroupedBackground).ignoresSafeArea())
     }
-
-    private var line: some View {
-        Rectangle()
-            .frame(height: 1)
-            .foregroundColor(Color(.systemGray4))
-    }
-}
-
-// MARK: - Google Icon
-private struct GoogleIcon: View {
-    var body: some View {
-        ZStack {
-            Text("G")
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .red, .yellow, .green],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-        }
-        .frame(width: 20, height: 20)
-    }
 }
 
 #Preview {
-    LoginView(onLoginSuccess: {})
+    LoginView(onLoginSuccess: {}, onSignUp: {})
 }

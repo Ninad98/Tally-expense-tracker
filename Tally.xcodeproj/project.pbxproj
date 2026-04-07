@@ -12,6 +12,8 @@
 		36D88F982F6DB14100CBA752 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 36D88F972F6DB14100CBA752 /* FirebaseDatabase */; };
 		36D88F9A2F6DB14500CBA752 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 36D88F992F6DB14500CBA752 /* FirebaseAuth */; };
 		36D88F9C2F6DB14900CBA752 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 36D88F9B2F6DB14900CBA752 /* FirebaseCore */; };
+		51A390882F78FEA500B76601 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 51A390872F78FEA500B76601 /* GoogleSignIn */; };
+		51A3908A2F78FEA500B76601 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 51A390892F78FEA500B76601 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,9 +48,11 @@
 			files = (
 				36D88F982F6DB14100CBA752 /* FirebaseDatabase in Frameworks */,
 				36D88F9C2F6DB14900CBA752 /* FirebaseCore in Frameworks */,
+				51A3908A2F78FEA500B76601 /* GoogleSignInSwift in Frameworks */,
 				36D88F912F6DAF4000CBA752 /* FirebaseAnalytics in Frameworks */,
 				36D88F962F6DB13C00CBA752 /* FirebaseFirestore in Frameworks */,
 				36D88F9A2F6DB14500CBA752 /* FirebaseAuth in Frameworks */,
+				51A390882F78FEA500B76601 /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,6 +108,8 @@
 				36D88F972F6DB14100CBA752 /* FirebaseDatabase */,
 				36D88F992F6DB14500CBA752 /* FirebaseAuth */,
 				36D88F9B2F6DB14900CBA752 /* FirebaseCore */,
+				51A390872F78FEA500B76601 /* GoogleSignIn */,
+				51A390892F78FEA500B76601 /* GoogleSignInSwift */,
 			);
 			productName = Tally;
 			productReference = 519913142F5CB24600532F8A /* Tally.app */;
@@ -135,6 +141,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				36D88F8F2F6DAF4000CBA752 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				51A390862F78FEA500B76601 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 519913152F5CB24600532F8A /* Products */;
@@ -299,6 +306,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tally/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Tally uses your location to automatically detect your local currency.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -332,6 +340,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tally/Info.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Tally uses your location to automatically detect your local currency.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -386,6 +395,14 @@
 				minimumVersion = 12.11.0;
 			};
 		};
+		51A390862F78FEA500B76601 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 9.1.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -413,6 +430,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 36D88F8F2F6DAF4000CBA752 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		51A390872F78FEA500B76601 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 51A390862F78FEA500B76601 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
+		};
+		51A390892F78FEA500B76601 /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 51A390862F78FEA500B76601 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

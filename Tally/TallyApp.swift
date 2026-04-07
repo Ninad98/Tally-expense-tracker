@@ -5,6 +5,8 @@
 //  Created by Mazen Tarek on 3/7/26.
 //
 
+import FirebaseCore
+import GoogleSignIn
 import SwiftUI
 
 enum AppScreen {
@@ -12,6 +14,7 @@ enum AppScreen {
     case onboarding
     case currencySelection(fromOnboarding: Bool)
     case login
+    case signUp
     case home
 }
 
@@ -24,6 +27,8 @@ struct TallyApp: App {
     @State private var screen: AppScreen = .splash
 
     init() {
+        FirebaseApp.configure()
+
         let splash = UserDefaults.standard.bool(forKey: "splashShown")
         let onboarding = UserDefaults.standard.bool(forKey: "onboardingCompleted")
         let currency = UserDefaults.standard.bool(forKey: "currencySelected")
@@ -83,15 +88,39 @@ struct TallyApp: App {
                     )
 
                 case .login:
-                    LoginView {
-                        withAnimation(.easeInOut(duration: 0.6)) {
-                            screen = .home
+                    LoginView(
+                        onLoginSuccess: {
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                screen = .home
+                            }
+                        },
+                        onSignUp: {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                screen = .signUp
+                            }
                         }
-                    }
+                    )
+
+                case .signUp:
+                    SignUpFlowView(
+                        onBackToLogin: {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                screen = .login
+                            }
+                        },
+                        onGoogleSignIn: {
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                screen = .home
+                            }
+                        }
+                    )
 
                 case .home:
                     HomeView()
                 }
+            }
+            .onOpenURL { url in
+                GIDSignIn.sharedInstance.handle(url)
             }
         }
     }
