@@ -10,6 +10,7 @@
 //  Tally
 //
 
+import Charts
 import SwiftUI
 
 struct BudgetView: View {
@@ -50,6 +51,7 @@ struct BudgetView: View {
             VStack(spacing: 20) {
                 headerSection
                 summaryCard
+                spendingTrendSection
                 recurringPaymentsCard
                 categoryBreakdown
                 actionButtons
@@ -75,6 +77,13 @@ struct BudgetView: View {
         }
     }
 
+
+    private var spendingTrendSection: some View {
+        SpendingTrendCard(
+            weeklyData: SpendingTrendCard.sampleData,
+            percentChange: 5.4
+        )
+    }
 
     private var recurringPaymentsCard: some View {
         Button {
