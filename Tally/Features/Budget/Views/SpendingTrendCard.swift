@@ -19,42 +19,21 @@ struct SpendingTrendCard: View {
 
     // List of WeeklySpending structs
     var weeklyData: [WeeklySpending]
-    var percentChange: Double
 
-    private var isPositiveChange: Bool { percentChange >= 0 }
+    // This is for the pointmarks on the chart to show the amount.
+    @State private var selectedWeek: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            header
+            Text("Spending Trend")
+                .font(.urbanist(.bold, size: 18))
+                .foregroundStyle(Color.heading)
             chart
         }
         .padding(20)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
         .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
-    }
-
-    private var header: some View {
-        HStack {
-            Text("Spending Trend")
-                .font(.urbanist(.bold, size: 18))
-                .foregroundStyle(Color.heading)
-            Spacer()
-            Text(changeLabel)
-                .font(.manrope(.bold, size: 12))
-                .foregroundStyle(isPositiveChange ? Color.errorRose : Color.green)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    (isPositiveChange ? Color.errorRose : Color.green).opacity(0.12)
-                )
-                .clipShape(Capsule())
-        }
-    }
-
-    private var changeLabel: String {
-        let sign = isPositiveChange ? "+" : ""
-        return "\(sign)\(String(format: "%.1f", percentChange))%"
     }
 
     // Attribution: https://developer.apple.com/documentation/charts/linemark
@@ -81,6 +60,24 @@ struct SpendingTrendCard: View {
             .interpolationMethod(.catmullRom)
             .foregroundStyle(Color.primaryBlue)
             .lineStyle(StrokeStyle(lineWidth: 2.5))
+
+            PointMark(
+                x: .value("Week", item.week),
+                y: .value("Amount", item.amount)
+            )
+            .symbolSize(item.week == selectedWeek ? 64 : 36)
+            .foregroundStyle(Color.primaryBlue)
+            .annotation(position: .top, spacing: 8) {
+                if item.week == selectedWeek {
+                    Text(item.amount.asCurrency())
+                        .font(.manrope(.bold, size: 12))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.primaryBlue)
+                        .clipShape(Capsule())
+                }
+            }
         }
         .chartYAxis(.hidden)
         .chartXAxis {
@@ -90,17 +87,28 @@ struct SpendingTrendCard: View {
                     .foregroundStyle(Color.mutedText)
             }
         }
+        // Attribution: GenAI helped me draw the amount as an overlay on the chart.
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .onTapGesture { location in
+                        guard let week: String = proxy.value(atX: location.x) else { return }
+                        withAnimation(.easeInOut(duration: 0.15)) {
+                            selectedWeek = (selectedWeek == week) ? nil : week
+                        }
+                    }
+            }
+        }
         .frame(height: 160)
     }
 }
 
 #Preview {
-    SpendingTrendCard(
-        weeklyData: SpendingTrendCard.sampleData,
-        percentChange: 5.4
-    )
-    .padding(20)
-    .background(Color.pageBG)
+    SpendingTrendCard(weeklyData: SpendingTrendCard.sampleData)
+        .padding(20)
+        .background(Color.pageBG)
 }
 
 extension SpendingTrendCard {

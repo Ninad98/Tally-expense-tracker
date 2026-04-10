@@ -79,10 +79,7 @@ struct BudgetView: View {
 
 
     private var spendingTrendSection: some View {
-        SpendingTrendCard(
-            weeklyData: SpendingTrendCard.sampleData,
-            percentChange: 5.4
-        )
+        SpendingTrendCard(weeklyData: viewModel.weeklySpendingData)
     }
 
     private var recurringPaymentsCard: some View {
