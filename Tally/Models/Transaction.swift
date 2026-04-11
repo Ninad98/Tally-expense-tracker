@@ -24,6 +24,8 @@ struct AppTransaction: Identifiable {
     let date: Date
     let note: String
     let createdAt: Date
+    let isRecurring: Bool
+    let isRecurringPaused: Bool
 
     var isIncome: Bool { type == .income }
 }

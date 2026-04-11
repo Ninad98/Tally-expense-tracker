@@ -64,6 +64,74 @@ final class BudgetViewModel: ObservableObject {
             .reduce(0) { $0 + $1.amount }
     }
 
+    var activeRecurringSubscriptionCount: Int {
+        let recurring = monthlyTransactions.filter { $0.isRecurring && !$0.isIncome && !$0.isRecurringPaused }
+        let keys = Set(recurring.map { "\($0.title)|\($0.categoryId)" })
+        return keys.count
+    }
+
+    // This sums the amount of all recurring expenses that are not paused.
+    var totalActiveRecurringAmount: Double {
+        monthlyTransactions
+            .filter { $0.isRecurring && !$0.isIncome && !$0.isRecurringPaused }
+            .reduce(0) { $0 + $1.amount }
+    }
+
+    // Calculates next due date for recurring expense.
+    var nextActiveRecurringPaymentDate: Date? {
+        let active = monthlyTransactions.filter { $0.isRecurring && !$0.isIncome && !$0.isRecurringPaused }
+        let nextDates = active.map {
+            Date.nextRecurringDueDate(fromAnchor: $0.date, includeSameDayAsReference: false)
+        }
+        return nextDates.min()
+    }
+
+    /// Splits the current month's expenses into 4 weeks.
+    var weeklySpendingData: [WeeklySpending] {
+        let expenses = monthlyTransactions.filter { !$0.isIncome }
+        var weekTotals = [0.0, 0.0, 0.0, 0.0]
+
+        // Loops over transactions and adds the amount based on the week it corresponds to.
+        for tx in expenses {
+            let day = Calendar.current.component(.day, from: tx.date)
+            let index = min((day - 1) / 7, 3)
+            weekTotals[index] += tx.amount
+        }
+
+        return (0..<4).map { i in
+            WeeklySpending(week: "W\(i + 1)", amount: weekTotals[i])
+        }
+    }
+
+    // To display the recurring expenses only in the recurring sheet.
+    var recurringExpenseTransactions: [AppTransaction] {
+        monthlyTransactions
+            .filter { $0.isRecurring && !$0.isIncome }
+            .sorted { $0.date > $1.date }
+    }
+
+    // This toggles the recurring expense between paused and unpaused.
+    func setRecurringPaused(transactionId: String, paused: Bool) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        Task {
+            do {
+                try await firebaseService.updateTransactionRecurringPaused(
+                    uid: uid,
+                    transactionId: transactionId,
+                    paused: paused
+                )
+                let transactions = await firebaseService.fetchMonthlyTransactions(uid: uid)
+                await MainActor.run {
+                    monthlyTransactions = transactions
+                }
+            } catch {
+                await MainActor.run {
+                    print("Failed to updating recurring expense status.")
+                }
+            }
+        }
+    }
+
     func loadBudget() {
         isLoading = true
         Task {

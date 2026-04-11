@@ -54,14 +54,22 @@ struct HomeDashboardView: View {
     // Displays the user's profile avatar,display his name from firebase
     private var headerRow: some View {
         HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.primaryBlue.opacity(0.15))
-                    .frame(width: 44, height: 44)
-                Image(systemName: "person.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.primaryBlue)
+            Button {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    selectedTab = 3
+                }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.primaryBlue.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.primaryBlue)
+                }
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Profile")
             //show a - if name is unable to fetch
             VStack(alignment: .leading, spacing: 2) {
                 Text("Welcome back,")
@@ -274,10 +282,19 @@ struct HomeDashboardView: View {
             }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(transaction.title)
-                    .font(.manrope(.bold, size: 15))
-                    .foregroundStyle(Color.heading)
-                Text("\(transaction.categoryName) • \(formatDate(transaction.date))")
+                // Added an HStack to display the recurring icon indication in recent transactions if it was a recurring one.
+                HStack(spacing: 6) {
+                    Text(transaction.title)
+                        .font(.manrope(.bold, size: 15))
+                        .foregroundStyle(Color.heading)
+                    if transaction.isRecurring, !transaction.isIncome {
+                        Image(systemName: "repeat")
+                            .font(.system(size: 11, weight: .semibold))
+                            // Change the icon color to mutedText if the recurring transaction is paused.
+                            .foregroundStyle(transaction.isRecurringPaused ? Color.mutedText : Color.primaryBlue)
+                    }
+                }
+                Text(recurringTransactionSubtitle(transaction))
                     .font(.manrope(.regular, size: 12))
                     .foregroundStyle(Color.mutedText)// took alignment and UI design help from Claude AI
             }
@@ -290,6 +307,16 @@ struct HomeDashboardView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)// took alignment and UI design help from Claude AI
+    }
+
+    // This appends Monthly or Paused in the subtitle of a transaction if it was a recurring one.
+    private func recurringTransactionSubtitle(_ transaction: AppTransaction) -> String {
+        var parts: [String] = [transaction.categoryName]
+        if transaction.isRecurring, !transaction.isIncome {
+            parts.append(transaction.isRecurringPaused ? "Paused" : "Monthly")
+        }
+        parts.append(formatDate(transaction.date))
+        return parts.joined(separator: " • ")
     }
 
     private func formatCurrency(_ value: Double) -> String {

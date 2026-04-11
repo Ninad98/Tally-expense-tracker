@@ -31,10 +31,13 @@ protocol FirebaseServiceProtocol {
         categoryIcon: String,
         type: TransactionType,
         date: Date,
-        note: String
+        note: String,
+        isRecurring: Bool
     ) async throws
 
     func fetchRecentTransactions(uid: String, limit: Int) async -> [AppTransaction]
 
     func fetchMonthlyTransactions(uid: String) async -> [AppTransaction]
+
+    func updateTransactionRecurringPaused(uid: String, transactionId: String, paused: Bool) async throws
 }

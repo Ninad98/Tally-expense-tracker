@@ -11,7 +11,7 @@ struct CategoryLimit: Identifiable {
     let id: String
     var name: String
     var description: String
-    let icon: String
+    var icon: String
     var limit: Double
     var isCustom: Bool = false // I added this to differentiate between user custom categories and the default one.
 
