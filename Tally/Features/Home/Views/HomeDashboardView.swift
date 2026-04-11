@@ -54,14 +54,22 @@ struct HomeDashboardView: View {
     // Displays the user's profile avatar,display his name from firebase
     private var headerRow: some View {
         HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.primaryBlue.opacity(0.15))
-                    .frame(width: 44, height: 44)
-                Image(systemName: "person.fill")
-                    .font(.system(size: 20))
-                    .foregroundStyle(Color.primaryBlue)
+            Button {
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    selectedTab = 3
+                }
+            } label: {
+                ZStack {
+                    Circle()
+                        .fill(Color.primaryBlue.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "person.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.primaryBlue)
+                }
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Profile")
             //show a - if name is unable to fetch
             VStack(alignment: .leading, spacing: 2) {
                 Text("Welcome back,")
