@@ -12,6 +12,9 @@ struct HomeDashboardView: View {
     @ObservedObject var viewModel: HomeViewModel
     @Binding var selectedTab: Int // Creates a two-way read and write to selectedTab variable.
 
+    // Controls whether the All Transactions sheet is presented.
+    @State private var showAllTransactions: Bool = false
+
     var body: some View {
         ZStack {
             Color.pageBG.ignoresSafeArea()
@@ -23,6 +26,10 @@ struct HomeDashboardView: View {
             }
         }
         .onAppear { viewModel.loadData() }
+        // Presents AllTransactionsView as a sheet when See All is tapped.
+        .sheet(isPresented: $showAllTransactions) {
+            AllTransactionsView()
+        }
     }
 
 
@@ -51,7 +58,8 @@ struct HomeDashboardView: View {
             .padding(.bottom, 100)
         }
     }
-    // Displays the user's profile avatar,display his name from firebase
+
+    // Displays the user's profile avatar, display his name from firebase
     private var headerRow: some View {
         HStack(spacing: 12) {
             Button {
@@ -70,7 +78,8 @@ struct HomeDashboardView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Profile")
-            //show a - if name is unable to fetch
+
+            // Show a dash if name is unable to fetch
             VStack(alignment: .leading, spacing: 2) {
                 Text("Welcome back,")
                     .font(.manrope(.regular, size: 13))
@@ -81,8 +90,8 @@ struct HomeDashboardView: View {
             }
 
             Spacer()
-            
-            // code to do in future for notifications
+
+            // Code to do in future for notifications
             Button {
                 // TODO: Notifications
             } label: {
@@ -98,8 +107,8 @@ struct HomeDashboardView: View {
             }
         }
     }
-    
-    //This is for showing total balance
+
+    // This is for showing total balance
     private var balanceCard: some View {
         VStack(spacing: 12) {
             Text("Total Balance")
@@ -125,7 +134,7 @@ struct HomeDashboardView: View {
                 )
                 .clipShape(Capsule())
             } else {
-                Text("No data yet") //Shown for users with no transactions
+                Text("No data yet") // Shown for users with no transactions
                     .font(.manrope(.medium, size: 13))
                     .foregroundStyle(Color.mutedText)
                     .padding(.horizontal, 14)
@@ -138,7 +147,7 @@ struct HomeDashboardView: View {
         .padding(.vertical, 24)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
+        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
     private var budgetSection: some View {
@@ -183,7 +192,7 @@ struct HomeDashboardView: View {
             .padding(20)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 20))
-            .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
+            .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
         }
         .buttonStyle(.plain)
     }
@@ -218,7 +227,7 @@ struct HomeDashboardView: View {
         .padding(20)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
+        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
     private var recentTransactionsSection: some View {
@@ -228,8 +237,9 @@ struct HomeDashboardView: View {
                     .font(.urbanist(.bold, size: 18))
                     .foregroundStyle(Color.heading)
                 Spacer()
+                // Tapping See All opens AllTransactionsView as a sheet.
                 Button("See All") {
-                    // todo: maybe have a new screen to show all transactions
+                    showAllTransactions = true
                 }
                 .font(.manrope(.bold, size: 14))
                 .foregroundStyle(Color.primaryBlue)
@@ -249,11 +259,12 @@ struct HomeDashboardView: View {
                 }
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
-                .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
+                .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
             }
         }
     }
-    // this is for no transactions
+
+    // This is for no transactions
     private var emptyTransactions: some View {
         VStack(spacing: 12) {
             Image(systemName: "tray")
@@ -267,7 +278,7 @@ struct HomeDashboardView: View {
         .padding(.vertical, 40)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)// took alignment and UI design help from Claude AI
+        .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
     }
 
     private func transactionRow(_ transaction: AppTransaction) -> some View {
@@ -296,7 +307,7 @@ struct HomeDashboardView: View {
                 }
                 Text(recurringTransactionSubtitle(transaction))
                     .font(.manrope(.regular, size: 12))
-                    .foregroundStyle(Color.mutedText)// took alignment and UI design help from Claude AI
+                    .foregroundStyle(Color.mutedText)
             }
 
             Spacer()
@@ -306,7 +317,7 @@ struct HomeDashboardView: View {
                 .foregroundStyle(transaction.isIncome ? Color.green : Color.errorRose)
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 14)// took alignment and UI design help from Claude AI
+        .padding(.vertical, 14)
     }
 
     // This appends Monthly or Paused in the subtitle of a transaction if it was a recurring one.
