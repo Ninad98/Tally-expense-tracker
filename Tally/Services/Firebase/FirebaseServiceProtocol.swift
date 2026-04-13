@@ -22,6 +22,8 @@ protocol FirebaseServiceProtocol {
 
     func updateUserImage(uid: String, jpegBase64: String) async throws
 
+    func updateUserFullName(uid: String, fullName: String) async throws
+
     func fetchActiveBudget(uid: String) async -> Budget?
 
     func saveBudget(uid: String, categoryLimits: [CategoryLimit], existingBudgetId: String?) async throws

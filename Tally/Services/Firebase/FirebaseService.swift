@@ -82,6 +82,12 @@ final class FirebaseService: FirebaseServiceProtocol {
         try await ref.setData(["profilePhoto": jpegBase64], merge: true)
     }
 
+    func updateUserFullName(uid: String, fullName: String) async throws {
+        let db = Firestore.firestore()
+        let ref = db.collection("users").document(uid)
+        try await ref.setData(["fullName": fullName], merge: true)
+    }
+
     func fetchActiveBudget(uid: String) async -> Budget? {
         do {
             let db = Firestore.firestore()
