@@ -50,6 +50,38 @@ final class FirebaseService: FirebaseServiceProtocol {
         }
     }
 
+    func fetchUserProfile(uid: String) async -> UserProfileSnapshot? {
+        do {
+            let db = Firestore.firestore()
+            let doc = try await db.collection("users").document(uid).getDocument()
+
+            // If document doesn't exist we return nil and print error.
+            guard doc.exists, let data = doc.data() else { 
+                print("User profile document does not exist.")
+                return nil 
+            }
+
+            let fullName = data["fullName"] as? String ?? ""
+            let email = data["email"] as? String ?? ""
+            let photo = (data["profilePhoto"] as? String) ?? (data["profilePhotoJPEGBase64"] as? String)
+
+            return UserProfileSnapshot(
+                fullName: fullName,
+                email: email,
+                profilePhoto: photo
+            )
+        } catch {
+            print("fetchUserProfile error")
+            return nil
+        }
+    }
+
+    func updateUserImage(uid: String, jpegBase64: String) async throws {
+        let db = Firestore.firestore()
+        let ref = db.collection("users").document(uid)
+        try await ref.setData(["profilePhoto": jpegBase64], merge: true)
+    }
+
     func fetchActiveBudget(uid: String) async -> Budget? {
         do {
             let db = Firestore.firestore()
