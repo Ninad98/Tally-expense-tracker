@@ -18,6 +18,10 @@ protocol FirebaseServiceProtocol {
 
     func fetchUserFullName(uid: String) async -> String?
 
+    func fetchUserProfile(uid: String) async -> UserProfileSnapshot?
+
+    func updateUserImage(uid: String, jpegBase64: String) async throws
+
     func fetchActiveBudget(uid: String) async -> Budget?
 
     func saveBudget(uid: String, categoryLimits: [CategoryLimit], existingBudgetId: String?) async throws
