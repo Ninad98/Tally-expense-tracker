@@ -24,6 +24,7 @@ final class ProfileViewModel: ObservableObject {
     @Published var avatarImage: UIImage?
     @Published var isLoading = false
     @Published var isSavingPhoto = false
+    @Published var isUpdatingFullName = false
     @Published var errorMessage: String?
 
     // Fetch fullName, email and profilePhoto as base64 from firestore.
@@ -44,6 +45,41 @@ final class ProfileViewModel: ObservableObject {
                     avatarImage = nil
                 }
                 isLoading = false
+            }
+        }
+    }
+
+    func updateFullName(_ name: String) async {
+
+        // Validate that the name is not empty or just whitespaces.
+        let inputName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !inputName.isEmpty else {
+            await MainActor.run { errorMessage = "Name can't be empty." }
+            return
+        }
+
+        await MainActor.run {
+            isUpdatingFullName = true
+            errorMessage = nil
+        }
+
+        do {
+            guard let uid = Auth.auth().currentUser?.uid else {
+                await MainActor.run {
+                    errorMessage = "Not signed in."
+                    isUpdatingFullName = false
+                }
+                return
+            }
+            try await firebaseService.updateUserFullName(uid: uid, fullName: inputName)
+            await MainActor.run {
+                fullName = inputName
+                isUpdatingFullName = false
+            }
+        } catch {
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+                isUpdatingFullName = false
             }
         }
     }
