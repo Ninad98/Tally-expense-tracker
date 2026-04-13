@@ -6,6 +6,7 @@
 //
 
 
+import PhotosUI
 import SwiftUI
 
 struct ProfileView: View {
@@ -15,6 +16,9 @@ struct ProfileView: View {
         case chevron
         case toggle(Binding<Bool>)
     }
+
+    @StateObject private var viewModel = ProfileViewModel()
+    @State private var photoPickerItem: PhotosPickerItem?
 
     // To keep track if biometric is enabled for login or not.
     @State private var biometricEnabled = true
@@ -43,23 +47,49 @@ struct ProfileView: View {
                 .padding(.bottom, 100)
             }
         }
+        .onAppear { viewModel.loadProfile() }
+        .alert("Photo update failed", isPresented: Binding(
+            get: { viewModel.errorMessage != nil },
+            set: { if !$0 { viewModel.errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { viewModel.errorMessage = nil }
+        } message: {
+            Text(viewModel.errorMessage ?? "")
+        }
     }
 
     private var avatarSection: some View {
         VStack(spacing: 8) {
             ZStack(alignment: .bottomTrailing) {
-                Circle()
-                    .fill(Color.primaryBlue.opacity(0.1))
+                ZStack {
+                    Group {
+                        if let image = viewModel.avatarImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFill()
+                        } else {
+                            Circle()
+                                .fill(Color.primaryBlue.opacity(0.1))
+                                .overlay(
+                                    Image(systemName: "person.fill")
+                                        .font(.system(size: 40))
+                                        .foregroundStyle(Color.primaryBlue.opacity(0.6))
+                                )
+                        }
+                    }
                     .frame(width: 96, height: 96)
-                    .overlay(
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 40))
-                            .foregroundStyle(Color.primaryBlue.opacity(0.6))
-                    )
+                    .clipShape(Circle())
 
-                Button {
-                    // TODO: I should make the profile picture editable and persist in firestore.
-                } label: {
+                    if viewModel.isSavingPhoto {
+                        Circle()
+                            .fill(Color.black.opacity(0.25))
+                            .frame(width: 96, height: 96)
+                        ProgressView()
+                            .tint(.white)
+                    }
+                }
+
+                PhotosPicker(selection: $photoPickerItem, matching: .images) {
                     ZStack {
                         Circle()
                             .fill(Color.primaryBlue)
@@ -69,22 +99,29 @@ struct ProfileView: View {
                             .foregroundStyle(.white)
                     }
                 }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isSavingPhoto)
                 .offset(x: 2, y: 2)
             }
 
-            // TODO: Fetch full name and email from firestore.
-            Text("Mazen Hussein")
+            Text(viewModel.fullName.isEmpty ? "—" : viewModel.fullName)
                 .font(.urbanist(.bold, size: 20))
                 .foregroundStyle(Color.heading)
 
-            Text("mazen.huss@example.com")
+            Text(viewModel.email.isEmpty ? "—" : viewModel.email)
                 .font(.manrope(.regular, size: 14))
                 .foregroundStyle(Color.mutedText)
         }
         .padding(.vertical, 8)
+        .onChange(of: photoPickerItem) { _, newItem in
+            guard newItem != nil else { return }
+            Task {
+                await viewModel.handlePickedPhotoItem(newItem)
+                photoPickerItem = nil
+            }
+        }
     }
 
-    // TODO: Make full name editable but not email.
     private var personalInfoSection: some View {
         settingsGroup(title: "PERSONAL INFO") {
             VStack(spacing: 0) {
@@ -93,7 +130,7 @@ struct ProfileView: View {
                     iconBG: Color.primaryBlue.opacity(0.1),
                     iconColor: Color.primaryBlue,
                     title: "Full Name",
-                    subtitle: "Mazen Hussein",
+                    subtitle: viewModel.fullName.isEmpty ? "—" : viewModel.fullName,
                     trailing: .chevron
                 )
 
@@ -105,7 +142,7 @@ struct ProfileView: View {
                     iconBG: Color.primaryBlue.opacity(0.1),
                     iconColor: Color.primaryBlue,
                     title: "Email Address",
-                    subtitle: "mazen.huss@example.com",
+                    subtitle: viewModel.email.isEmpty ? "—" : viewModel.email,
                     trailing: .chevron
                 )
             }
