@@ -19,12 +19,11 @@ struct ProfileView: View {
     }
 
     @StateObject private var viewModel = ProfileViewModel()
+    @EnvironmentObject private var biometricManager: BiometricAuthManager
     @State private var photoPickerItem: PhotosPickerItem?
     @State private var showEditFullName = false
     @State private var fullNameDraft = ""
 
-    // To keep track if biometric is enabled for login or not.
-    @State private var biometricEnabled = false
     // To keep track if notifications are enabled or not.
     @State private var notificationsEnabled = true
 
@@ -203,14 +202,18 @@ struct ProfileView: View {
                 Divider()
                     .padding(.leading, 56)
 
-                // TODO: Implement biometric login.
                 settingsRow(
                     icon: "faceid",
                     iconBG: Color.primaryBlue.opacity(0.1),
                     iconColor: Color.primaryBlue,
                     title: "Biometric Login",
-                    subtitle: "Use FaceID or Fingerprint",
-                    trailing: .toggle($biometricEnabled)
+                    subtitle: biometricManager.isAvailable
+                        ? "Use FaceID or Fingerprint"
+                        : "Not available on this device",
+                    trailing: biometricManager.isAvailable
+                        ? .toggle($biometricManager.isEnabled)
+                        : .none,
+                    readOnly: !biometricManager.isAvailable
                 )
             }
         }
@@ -342,4 +345,5 @@ struct ProfileView: View {
 
 #Preview {
     ProfileView()
+        .environmentObject(BiometricAuthManager())
 }
