@@ -19,6 +19,8 @@ struct ProfileView: View {
 
     @StateObject private var viewModel = ProfileViewModel()
     @State private var photoPickerItem: PhotosPickerItem?
+    @State private var showEditFullName = false
+    @State private var fullNameDraft = ""
 
     // To keep track if biometric is enabled for login or not.
     @State private var biometricEnabled = true
@@ -48,7 +50,33 @@ struct ProfileView: View {
             }
         }
         .onAppear { viewModel.loadProfile() }
-        .alert("Photo update failed", isPresented: Binding(
+        .alert("Edit full name", isPresented: $showEditFullName) {
+            TextField("Full name", text: $fullNameDraft)
+                .textInputAutocapitalization(.words)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") {
+                Task { await viewModel.updateFullName(fullNameDraft) }
+            }
+            .disabled(viewModel.isUpdatingFullName)
+        } message: {
+            Text("This name is saved to your account.")
+        }
+        .onChange(of: showEditFullName) { _, isShowing in
+            if isShowing {
+                fullNameDraft = viewModel.fullName
+            }
+        }
+        .onChange(of: viewModel.isUpdatingFullName) { _, saving in
+            if !saving, viewModel.errorMessage == nil {
+                showEditFullName = false
+            }
+        }
+        .onChange(of: viewModel.errorMessage) { _, newValue in
+            if newValue != nil {
+                showEditFullName = false
+            }
+        }
+        .alert("Error", isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
@@ -125,14 +153,23 @@ struct ProfileView: View {
     private var personalInfoSection: some View {
         settingsGroup(title: "PERSONAL INFO") {
             VStack(spacing: 0) {
-                settingsRow(
-                    icon: "person.fill",
-                    iconBG: Color.primaryBlue.opacity(0.1),
-                    iconColor: Color.primaryBlue,
-                    title: "Full Name",
-                    subtitle: viewModel.fullName.isEmpty ? "—" : viewModel.fullName,
-                    trailing: .chevron
-                )
+                Button {
+                    fullNameDraft = viewModel.fullName
+                    showEditFullName = true
+                } label: {
+                    settingsRow(
+                        icon: "person.fill",
+                        iconBG: Color.primaryBlue.opacity(0.1),
+                        iconColor: Color.primaryBlue,
+                        title: "Full Name",
+                        subtitle: viewModel.fullName.isEmpty ? "—" : viewModel.fullName,
+                        trailing: .chevron
+                    )
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(viewModel.isUpdatingFullName)
 
                 Divider()
                     .padding(.leading, 56)
