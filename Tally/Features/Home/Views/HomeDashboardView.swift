@@ -32,7 +32,6 @@ struct HomeDashboardView: View {
         }
     }
 
-
     private var loadingState: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -249,8 +248,17 @@ struct HomeDashboardView: View {
                 emptyTransactions
             } else {
                 VStack(spacing: 0) {
+                    // Swipe left on any row to reveal the red Delete button.
+                    // allowsFullSwipe: true means a full swipe deletes without tapping the button.
                     ForEach(viewModel.recentTransactions) { transaction in
                         transactionRow(transaction)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                Button(role: .destructive) {
+                                    viewModel.deleteTransaction(transaction)
+                                } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
                         if transaction.id != viewModel.recentTransactions.last?.id {
                             Divider()
                                 .padding(.leading, 72)
@@ -345,7 +353,6 @@ struct HomeDashboardView: View {
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
-    
 }
 
 #Preview {
