@@ -24,7 +24,7 @@ struct ProfileView: View {
     @State private var fullNameDraft = ""
 
     // To keep track if biometric is enabled for login or not.
-    @State private var biometricEnabled = true
+    @State private var biometricEnabled = false
     // To keep track if notifications are enabled or not.
     @State private var notificationsEnabled = true
 
