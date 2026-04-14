@@ -135,8 +135,6 @@ struct AllTransactionsView: View {
     // Renders a month header followed by all transactions in that month.
     private func monthSection(_ group: (month: String, transactions: [AppTransaction])) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-
-            // Month header e.g. "April 2026"
             Text(group.month.uppercased())
                 .font(.manrope(.bold, size: 12))
                 .foregroundStyle(Color.mutedText)
@@ -146,7 +144,14 @@ struct AllTransactionsView: View {
             VStack(spacing: 0) {
                 ForEach(group.transactions) { transaction in
                     transactionRow(transaction)
-                    // Divider between rows but not after the last one.
+                        // Swipe left to reveal the delete button.
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                viewModel.deleteTransaction(transaction)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     if transaction.id != group.transactions.last?.id {
                         Divider()
                             .padding(.leading, 72)

@@ -345,6 +345,7 @@ struct HomeDashboardView: View {
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
+    
 }
 
 #Preview {

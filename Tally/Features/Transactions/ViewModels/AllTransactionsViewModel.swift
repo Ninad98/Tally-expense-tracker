@@ -70,4 +70,22 @@ final class AllTransactionsViewModel: ObservableObject {
             }
         }
     }
+    
+    func deleteTransaction(_ transaction: AppTransaction) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        Task {
+            do {
+                try await firebaseService.deleteTransaction(
+                    uid: uid,
+                    transactionId: transaction.id
+                )
+                await MainActor.run {
+                    // Remove locally immediately so UI updates without re-fetching.
+                    allTransactions.removeAll { $0.id == transaction.id }
+                }
+            } catch {
+                print("Failed to delete transaction: \(error.localizedDescription)")
+            }
+        }
+    }
 }

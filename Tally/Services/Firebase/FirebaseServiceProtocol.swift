@@ -42,4 +42,6 @@ protocol FirebaseServiceProtocol {
     func updateTransactionRecurringPaused(uid: String, transactionId: String, paused: Bool) async throws
     
     func fetchAllTransactions(uid: String) async -> [AppTransaction]
+    
+    func deleteTransaction(uid: String, transactionId: String) async throws
 }

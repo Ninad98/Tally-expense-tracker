@@ -262,4 +262,11 @@ final class FirebaseService: FirebaseServiceProtocol {
             return []
         }
     }
+    
+    func deleteTransaction(uid: String, transactionId: String) async throws {
+        let db = Firestore.firestore()
+        try await db.collection("users").document(uid)
+            .collection("transactions").document(transactionId)
+            .delete()
+    }
 }
