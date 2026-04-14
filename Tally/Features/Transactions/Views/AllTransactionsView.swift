@@ -2,9 +2,6 @@
 //  AllTransactionsView.swift
 //  Tally
 //
-//  Created by Ninad Mankar on 4/11/26.
-//
-
 
 import SwiftUI
 
@@ -57,6 +54,8 @@ struct AllTransactionsView: View {
         }
     }
 
+    // MARK: - Empty State
+
     private var emptyState: some View {
         VStack(spacing: 12) {
             Image(systemName: "tray")
@@ -72,6 +71,8 @@ struct AllTransactionsView: View {
                 .padding(.horizontal, 40)
         }
     }
+
+    // MARK: - Transaction List
 
     private var transactionList: some View {
         ScrollView(showsIndicators: false) {
@@ -135,16 +136,22 @@ struct AllTransactionsView: View {
     // Renders a month header followed by all transactions in that month.
     private func monthSection(_ group: (month: String, transactions: [AppTransaction])) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+
+            // Month header e.g. "APRIL 2026"
             Text(group.month.uppercased())
                 .font(.manrope(.bold, size: 12))
                 .foregroundStyle(Color.mutedText)
                 .tracking(0.6)
                 .padding(.leading, 4)
 
-            VStack(spacing: 0) {
+            // List is required for swipeActions to work.
+            // VStack does not support swipe-to-delete.
+            List {
                 ForEach(group.transactions) { transaction in
                     transactionRow(transaction)
-                        // Swipe left to reveal the delete button.
+                        .listRowInsets(EdgeInsets())
+                        .listRowBackground(Color.white)
+                        .listRowSeparatorTint(Color(.systemGray5))
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                             Button(role: .destructive) {
                                 viewModel.deleteTransaction(transaction)
@@ -152,12 +159,14 @@ struct AllTransactionsView: View {
                                 Label("Delete", systemImage: "trash")
                             }
                         }
-                    if transaction.id != group.transactions.last?.id {
-                        Divider()
-                            .padding(.leading, 72)
-                    }
                 }
             }
+            .listStyle(.plain)
+            // Disable List's own scrolling since it sits inside a ScrollView.
+            .scrollDisabled(true)
+            // Explicit height needed when a List is inside a ScrollView.
+            // 76 matches the row height from .padding(.vertical, 14).
+            .frame(height: CGFloat(group.transactions.count) * 76)
             .background(Color.white)
             .clipShape(RoundedRectangle(cornerRadius: 20))
             .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)

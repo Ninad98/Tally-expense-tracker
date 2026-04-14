@@ -247,11 +247,14 @@ struct HomeDashboardView: View {
             if viewModel.recentTransactions.isEmpty {
                 emptyTransactions
             } else {
-                VStack(spacing: 0) {
-                    // Swipe left on any row to reveal the red Delete button.
-                    // allowsFullSwipe: true means a full swipe deletes without tapping the button.
+                // List is required for swipeActions to work.
+                // VStack does not support swipe-to-delete.
+                List {
                     ForEach(viewModel.recentTransactions) { transaction in
                         transactionRow(transaction)
+                            .listRowInsets(EdgeInsets())
+                            .listRowBackground(Color.white)
+                            .listRowSeparatorTint(Color(.systemGray5))
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
                                     viewModel.deleteTransaction(transaction)
@@ -259,12 +262,14 @@ struct HomeDashboardView: View {
                                     Label("Delete", systemImage: "trash")
                                 }
                             }
-                        if transaction.id != viewModel.recentTransactions.last?.id {
-                            Divider()
-                                .padding(.leading, 72)
-                        }
                     }
                 }
+                .listStyle(.plain)
+                // Disable List's own scrolling since it sits inside a ScrollView.
+                .scrollDisabled(true)
+                // Explicit height needed when a List is inside a ScrollView.
+                // 76 matches the row height from .padding(.vertical, 14).
+                .frame(height: CGFloat(viewModel.recentTransactions.count) * 76)
                 .background(Color.white)
                 .clipShape(RoundedRectangle(cornerRadius: 20))
                 .shadow(color: Color.black.opacity(0.05), radius: 12, x: 0, y: 4)
