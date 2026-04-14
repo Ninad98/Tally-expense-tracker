@@ -14,6 +14,7 @@ struct ProfileView: View {
     // To keep track of the action for the settings rows.
     private enum SettingAction {
         case chevron
+        case none
         case toggle(Binding<Bool>)
     }
 
@@ -180,7 +181,8 @@ struct ProfileView: View {
                     iconColor: Color.primaryBlue,
                     title: "Email Address",
                     subtitle: viewModel.email.isEmpty ? "—" : viewModel.email,
-                    trailing: .chevron
+                    trailing: .none,
+                    readOnly: true
                 )
             }
         }
@@ -291,7 +293,8 @@ struct ProfileView: View {
         iconColor: Color,
         title: String,
         subtitle: String?,
-        trailing: SettingAction
+        trailing: SettingAction,
+        readOnly: Bool = false
     ) -> some View {
         HStack(spacing: 12) {
             ZStack {
@@ -306,7 +309,7 @@ struct ProfileView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.manrope(.bold, size: 14))
-                    .foregroundStyle(Color.heading)
+                    .foregroundStyle(readOnly ? Color.mutedText : Color.heading)
                 if let subtitle {
                     Text(subtitle)
                         .font(.manrope(.regular, size: 12))
@@ -322,6 +325,8 @@ struct ProfileView: View {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Color.mutedText)
+            case .none:
+                EmptyView()
             case .toggle(let binding):
                 Toggle("", isOn: binding)
                     .labelsHidden()
@@ -331,6 +336,7 @@ struct ProfileView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+        .opacity(readOnly ? 0.72 : 1)
     }
 }
 
