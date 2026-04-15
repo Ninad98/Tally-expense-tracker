@@ -75,4 +75,29 @@ final class HomeViewModel: ObservableObject {
             }
         }
     }
+
+    func deleteTransaction(_ transaction: AppTransaction) {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+        Task {
+            do {
+                try await firebaseService.deleteTransaction(
+                    uid: uid,
+                    transactionId: transaction.id
+                )
+                await MainActor.run {
+                    recentTransactions.removeAll { $0.id == transaction.id }
+
+                    if transaction.isIncome {
+                        monthlyIncome -= transaction.amount
+                    } else {
+                        monthlyExpenses -= transaction.amount
+                        budgetSpent -= transaction.amount
+                    }
+                    totalBalance = monthlyIncome - monthlyExpenses
+                }
+            } catch {
+                print("Failed to delete transaction: \(error.localizedDescription)")
+            }
+        }
+    }
 }

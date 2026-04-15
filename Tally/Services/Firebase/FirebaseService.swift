@@ -248,4 +248,25 @@ final class FirebaseService: FirebaseServiceProtocol {
             isRecurringPaused: isRecurringPaused
         )
     }
+    
+    func fetchAllTransactions(uid: String) async -> [AppTransaction] {
+        do {
+            let db = Firestore.firestore()
+            let snapshot = try await db.collection("users").document(uid)
+                .collection("transactions")
+                .order(by: "date", descending: true)
+                .getDocuments()
+            return snapshot.documents.compactMap { mapTransaction($0) }
+        } catch {
+            print("Error fetching all transactions: \(error.localizedDescription)")
+            return []
+        }
+    }
+    
+    func deleteTransaction(uid: String, transactionId: String) async throws {
+        let db = Firestore.firestore()
+        try await db.collection("users").document(uid)
+            .collection("transactions").document(transactionId)
+            .delete()
+    }
 }
