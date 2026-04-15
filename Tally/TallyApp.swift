@@ -24,6 +24,7 @@ struct TallyApp: App {
     @AppStorage("onboardingCompleted") private var onboardingCompleted: Bool = false
     @AppStorage("currencySelected") private var currencySelected: Bool = false
 
+    @StateObject private var biometricManager = BiometricAuthManager()
     @State private var screen: AppScreen = .splash
 
     init() {
@@ -119,6 +120,7 @@ struct TallyApp: App {
                     HomeView()
                 }
             }
+            .environmentObject(biometricManager)
             .onOpenURL { url in
                 GIDSignIn.sharedInstance.handle(url)
             }
