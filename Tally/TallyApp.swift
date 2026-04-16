@@ -24,8 +24,12 @@ struct TallyApp: App {
     @AppStorage("onboardingCompleted") private var onboardingCompleted: Bool = false
     @AppStorage("currencySelected") private var currencySelected: Bool = false
 
+    @Environment(\.scenePhase) private var isAppActive
     @StateObject private var biometricManager = BiometricAuthManager()
     @State private var screen: AppScreen = .splash
+    @State private var appBackgroundedAt: Date?
+
+    private let lockoutInterval: TimeInterval = 5
 
     init() {
         FirebaseApp.configure()
@@ -117,10 +121,38 @@ struct TallyApp: App {
                     )
 
                 case .home:
-                    HomeView()
+                // If app is locked and in backgroudn state for 5 seconds or more we show the biometric view page.
+                    ZStack {
+                        HomeView()
+
+                        if biometricManager.isLocked {
+                            BiometricLockView()
+                                .transition(.opacity)
+                        }
+                    }
                 }
             }
             .environmentObject(biometricManager)
+            .onChange(of: isAppActive) { _, newPhase in
+            // Check if biometric toggle is turned on or not.
+                guard biometricManager.isEnabled, case .home = screen else { return }
+
+                // if the state of the app was inactive or in the background we set the time.
+                switch newPhase {
+                case .background, .inactive:
+                    if appBackgroundedAt == nil {
+                        appBackgroundedAt = Date()
+                    }
+                case .active:
+                    if let leftAt = appBackgroundedAt,
+                       Date().timeIntervalSince(leftAt) >= lockoutInterval {
+                        biometricManager.isLocked = true
+                    }
+                    appBackgroundedAt = nil
+                @unknown default:
+                    break
+                }
+            }
             .onOpenURL { url in
                 GIDSignIn.sharedInstance.handle(url)
             }
