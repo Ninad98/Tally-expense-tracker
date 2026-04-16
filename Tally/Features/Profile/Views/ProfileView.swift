@@ -29,6 +29,7 @@ struct ProfileView: View {
     // To keep track if notifications are enabled or not.
     @State private var notificationsEnabled = true
     @State private var logoutError: String?
+    @State private var showLogoutDialog = false
 
     var body: some View {
         ZStack {
@@ -94,6 +95,22 @@ struct ProfileView: View {
             Button("OK", role: .cancel) { logoutError = nil }
         } message: {
             Text(logoutError ?? "")
+        }
+        .sheet(isPresented: $showLogoutDialog) {
+            LogoutConfirmationSheet(onConfirm: performLogout)
+                .presentationDetents([.height(400)])
+                .presentationDragIndicator(.hidden)
+                .presentationBackground(Color.pageBG)
+        }
+    }
+
+    private func performLogout() {
+        do {
+            try Authentication().logout()
+            biometricManager.isLocked = false
+            onLogout()
+        } catch {
+            logoutError = error.localizedDescription
         }
     }
 
@@ -257,13 +274,7 @@ struct ProfileView: View {
 
     private var logOutButton: some View {
         Button {
-            do {
-                try Authentication().logout()
-                biometricManager.isLocked = false
-                onLogout()
-            } catch {
-                logoutError = error.localizedDescription
-            }
+            showLogoutDialog = true
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -357,6 +368,69 @@ struct ProfileView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .opacity(readOnly ? 0.72 : 1)
+    }
+}
+
+private struct LogoutConfirmationSheet: View {
+
+    @Environment(\.dismiss) private var dismiss
+    let onConfirm: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.errorRose.opacity(0.15))
+                    .frame(width: 76, height: 76)
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundStyle(Color.errorRose)
+            }
+
+            Text("Logout?")
+                .font(.urbanist(.bold, size: 22))
+                .foregroundStyle(Color.heading)
+
+            Text("Are you sure you want to log out of your account?")
+                .font(.manrope(.regular, size: 14))
+                .foregroundStyle(Color.mutedText)
+                .multilineTextAlignment(.center)
+
+            VStack(spacing: 12) {
+                Button {
+                    onConfirm()
+                    dismiss()
+                } label: {
+                    Text("Logout")
+                        .font(.manrope(.bold, size: 16))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.errorRose)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                        .font(.manrope(.bold, size: 16))
+                        .foregroundStyle(Color.errorRose)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.errorRose.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
     }
 }
 
