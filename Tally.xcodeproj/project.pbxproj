@@ -306,6 +306,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tally/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "ally uses Face ID to protect your financial data.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Tally uses your location to automatically detect your local currency.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -340,6 +341,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Tally/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "ally uses Face ID to protect your financial data.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Tally uses your location to automatically detect your local currency.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
