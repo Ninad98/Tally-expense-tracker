@@ -123,7 +123,11 @@ struct TallyApp: App {
                 case .home:
                 // If app is locked and in backgroudn state for 5 seconds or more we show the biometric view page.
                     ZStack {
-                        HomeView()
+                        HomeView(onLogout: {
+                            withAnimation(.easeInOut(duration: 0.6)) {
+                                screen = .login
+                            }
+                        })
 
                         if biometricManager.isLocked {
                             BiometricLockView()

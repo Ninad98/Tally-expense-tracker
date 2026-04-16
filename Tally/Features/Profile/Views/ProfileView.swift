@@ -11,6 +11,8 @@ import SwiftUI
 
 struct ProfileView: View {
 
+    var onLogout: () -> Void = {}
+
     // To keep track of the action for the settings rows.
     private enum SettingAction {
         case chevron
@@ -26,6 +28,7 @@ struct ProfileView: View {
 
     // To keep track if notifications are enabled or not.
     @State private var notificationsEnabled = true
+    @State private var logoutError: String?
 
     var body: some View {
         ZStack {
@@ -83,6 +86,14 @@ struct ProfileView: View {
             Button("OK", role: .cancel) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .alert("Log out failed", isPresented: Binding(
+            get: { logoutError != nil },
+            set: { if !$0 { logoutError = nil } }
+        )) {
+            Button("OK", role: .cancel) { logoutError = nil }
+        } message: {
+            Text(logoutError ?? "")
         }
     }
 
@@ -246,7 +257,13 @@ struct ProfileView: View {
 
     private var logOutButton: some View {
         Button {
-            // TODO: Logout user and navigate back to login screen.
+            do {
+                try Authentication().logout()
+                biometricManager.isLocked = false
+                onLogout()
+            } catch {
+                logoutError = error.localizedDescription
+            }
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
