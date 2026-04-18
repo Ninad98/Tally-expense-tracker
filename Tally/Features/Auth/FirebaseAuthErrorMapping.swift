@@ -121,4 +121,35 @@ enum FirebaseAuthErrorMapping {
             return .general(error.localizedDescription)
         }
     }
+
+    static func mapPasswordReset(_ error: Error) -> String {
+        let nsErr = error as NSError
+        guard nsErr.domain == AuthErrors.domain,
+              let code = AuthErrorCode(rawValue: nsErr.code) else {
+            return error.localizedDescription
+        }
+
+        switch code {
+        case .invalidEmail:
+            return "Invalid email address."
+
+        case .networkError:
+            return "Network error. Try again."
+
+        case .operationNotAllowed:
+            return "Password reset is not enabled for this app."
+
+        case .userNotFound:
+            return "No account found for this email."
+
+        case .tooManyRequests:
+            return "Too many attempts. Try again later."
+
+        case .userDisabled:
+            return "This account has been disabled."
+
+        default:
+            return error.localizedDescription
+        }
+    }
 }
