@@ -15,6 +15,7 @@ enum AppScreen {
     case currencySelection(fromOnboarding: Bool)
     case login
     case signUp
+    case forgotPassword
     case home
 }
 
@@ -102,6 +103,20 @@ struct TallyApp: App {
                         onSignUp: {
                             withAnimation(.easeInOut(duration: 0.35)) {
                                 screen = .signUp
+                            }
+                        },
+                        onForgotPassword: {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                screen = .forgotPassword
+                            }
+                        }
+                    )
+
+                case .forgotPassword:
+                    ForgotPasswordView(
+                        onBackToLogin: {
+                            withAnimation(.easeInOut(duration: 0.35)) {
+                                screen = .login
                             }
                         }
                     )
