@@ -30,6 +30,7 @@ struct ProfileView: View {
     @State private var notificationsEnabled = true
     @State private var logoutError: String?
     @State private var showLogoutDialog = false
+    @State private var showChangePassword = false
 
     var body: some View {
         ZStack {
@@ -100,6 +101,11 @@ struct ProfileView: View {
             LogoutConfirmationSheet(onConfirm: performLogout)
                 .presentationDetents([.height(400)])
                 .presentationDragIndicator(.hidden)
+                .presentationBackground(Color.pageBG)
+        }
+        .sheet(isPresented: $showChangePassword) {
+            ChangePasswordSheet(viewModel: viewModel)
+                .presentationDragIndicator(.visible)
                 .presentationBackground(Color.pageBG)
         }
     }
@@ -218,14 +224,33 @@ struct ProfileView: View {
     private var securitySection: some View {
         settingsGroup(title: "SECURITY") {
             VStack(spacing: 0) {
-                settingsRow(
-                    icon: "lock.fill",
-                    iconBG: Color.heading.opacity(0.08),
-                    iconColor: Color.heading,
-                    title: "Change Password",
-                    subtitle: nil,
-                    trailing: .chevron
-                )
+                Group {
+                    if viewModel.hasEmailPasswordProvider {
+                        Button {
+                            showChangePassword = true
+                        } label: {
+                            settingsRow(
+                                icon: "lock.fill",
+                                iconBG: Color.heading.opacity(0.08),
+                                iconColor: Color.heading,
+                                title: "Change Password",
+                                subtitle: nil,
+                                trailing: .chevron
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        settingsRow(
+                            icon: "lock.fill",
+                            iconBG: Color.heading.opacity(0.08),
+                            iconColor: Color.heading,
+                            title: "Change Password",
+                            subtitle: viewModel.passwordChangeUnavailableSubtitle,
+                            trailing: .none,
+                            readOnly: true
+                        )
+                    }
+                }
 
                 Divider()
                     .padding(.leading, 56)

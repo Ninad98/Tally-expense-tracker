@@ -84,4 +84,41 @@ enum FirebaseAuthErrorMapping {
             return .auth(error.localizedDescription)
         }
     }
+
+    enum ChangePasswordMapped {
+        case currentPassword(String)
+        case newPassword(String)
+        case general(String)
+    }
+
+    static func mapChangePassword(_ error: Error) -> ChangePasswordMapped {
+        let nsErr = error as NSError
+        guard nsErr.domain == AuthErrors.domain,
+              let code = AuthErrorCode(rawValue: nsErr.code) else {
+            return .general(error.localizedDescription)
+        }
+
+        switch code {
+        case .wrongPassword:
+            return .currentPassword("Current password is incorrect.")
+
+        case .weakPassword:
+            return .newPassword("Password must be at least 8 characters.")
+
+        case .requiresRecentLogin:
+            return .general("Please sign out and sign in again, then try changing your password.")
+
+        case .invalidCredential:
+            return .currentPassword("Current password is incorrect.")
+
+        case .networkError:
+            return .general("Network error. Try again.")
+
+        case .tooManyRequests:
+            return .general("Too many attempts. Try again later.")
+
+        default:
+            return .general(error.localizedDescription)
+        }
+    }
 }
