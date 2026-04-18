@@ -225,7 +225,7 @@ struct ProfileView: View {
         settingsGroup(title: "SECURITY") {
             VStack(spacing: 0) {
                 Group {
-                    if viewModel.hasEmailPasswordProvider {
+                    if viewModel.isEmailProvider {
                         Button {
                             showChangePassword = true
                         } label: {
@@ -245,7 +245,7 @@ struct ProfileView: View {
                             iconBG: Color.heading.opacity(0.08),
                             iconColor: Color.heading,
                             title: "Change Password",
-                            subtitle: viewModel.passwordChangeUnavailableSubtitle,
+                            subtitle: viewModel.passwordChangeUnavailable,
                             trailing: .none,
                             readOnly: true
                         )
