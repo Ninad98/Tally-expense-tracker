@@ -5,7 +5,6 @@
 //  Created by Ninad Mankar on 3/24/26.
 //
 
-
 import PhotosUI
 import SwiftUI
 
@@ -27,7 +26,7 @@ struct ProfileView: View {
     @State private var fullNameDraft = ""
 
     // To keep track if notifications are enabled or not.
-    @State private var notificationsEnabled = true
+    @State private var notificationsEnabled = false
     @State private var logoutError: String?
     @State private var showLogoutDialog = false
     @State private var showChangePassword = false
@@ -55,6 +54,10 @@ struct ProfileView: View {
             }
         }
         .onAppear { viewModel.loadProfile() }
+        // Sync the toggle state with whether a reminder is actually scheduled.
+        .task {
+            notificationsEnabled = await NotificationManager.shared.isReminderScheduled()
+        }
         .alert("Edit full name", isPresented: $showEditFullName) {
             TextField("Full name", text: $fullNameDraft)
                 .textInputAutocapitalization(.words)
@@ -284,6 +287,8 @@ struct ProfileView: View {
             )
         }
     }
+
+    // Notifications toggle wired to NotificationManager to schedule or cancel reminders.
     private var appSettingsSection: some View {
         settingsGroup(title: "APP SETTINGS") {
             settingsRow(
@@ -291,9 +296,35 @@ struct ProfileView: View {
                 iconBG: Color.primaryBlue.opacity(0.1),
                 iconColor: Color.primaryBlue,
                 title: "Push Notifications",
-                subtitle: "Spending alerts & weekly reports",
+                subtitle: "Reminder to add expenses every 6 hours",
                 trailing: .toggle($notificationsEnabled)
             )
+            .onChange(of: notificationsEnabled) { _, isOn in
+                Task {
+                    let status = await NotificationManager.shared.authorizationStatus()
+
+                    // If the user previously denied permission in system settings,
+                    // snap the toggle back to off since we cannot schedule notifications.
+                    if status == .denied {
+                        await MainActor.run { notificationsEnabled = false }
+                        return
+                    }
+
+                    if isOn {
+                        // Request permission if not yet granted, then schedule.
+                        let granted = await NotificationManager.shared.requestPermission()
+                        if granted {
+                            NotificationManager.shared.scheduleExpenseReminder()
+                        } else {
+                            // Permission not granted — snap toggle back to off.
+                            await MainActor.run { notificationsEnabled = false }
+                        }
+                    } else {
+                        // User turned off the toggle — cancel the reminder.
+                        NotificationManager.shared.cancelExpenseReminder()
+                    }
+                }
+            }
         }
     }
 
@@ -320,7 +351,6 @@ struct ProfileView: View {
             .font(.manrope(.regular, size: 12))
             .foregroundStyle(Color.mutedText)
     }
-
 
     // Reusable stylings for the settings groups.
     private func settingsGroup<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
