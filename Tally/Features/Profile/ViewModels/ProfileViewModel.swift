@@ -27,9 +27,34 @@ final class ProfileViewModel: ObservableObject {
     @Published var isUpdatingFullName = false
     @Published var errorMessage: String?
 
+    @Published var isEmailProvider = false
+    @Published var passwordChangeUnavailable: String?
+    @Published var isChangingPassword = false
+    @Published var changePasswordError: String?
+
+    func refreshAuthProviders() {
+        guard let user = Auth.auth().currentUser else {
+            isEmailProvider = false
+            passwordChangeUnavailable = nil
+            return
+        }
+        let hasEmailPassword = user.providerData.contains { $0.providerID == EmailAuthProviderID }
+        isEmailProvider = hasEmailPassword
+        guard !hasEmailPassword else {
+            passwordChangeUnavailable = nil
+            return
+        }
+        if user.providerData.contains(where: { $0.providerID == GoogleAuthProviderID }) {
+            passwordChangeUnavailable = "Managed by Google"
+        } else {
+            passwordChangeUnavailable = "Not available for this sign-in method"
+        }
+    }
+
     // Fetch fullName, email and profilePhoto as base64 from firestore.
     func loadProfile() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
+        refreshAuthProviders()
         isLoading = true
         Task {
             let profile = await firebaseService.fetchUserProfile(uid: uid)
@@ -45,7 +70,91 @@ final class ProfileViewModel: ObservableObject {
                     avatarImage = nil
                 }
                 isLoading = false
+                refreshAuthProviders()
             }
+        }
+    }
+
+    // Takes in current password, new password and re-entered new password.
+    func changePassword(currentPassword: String, newPassword: String, confirmation: String) async -> Bool {
+        let trimmedNew = newPassword.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedConfirm = confirmation.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Clears error messages and sets isChangingPassword to true.
+        await MainActor.run {
+            changePasswordError = nil
+            isChangingPassword = true
+        }
+
+        // Checks if the account is an email provider and not Google signin.
+        guard isEmailProvider else {
+            await MainActor.run {
+                changePasswordError = "Password change isn’t available for this account."
+                isChangingPassword = false
+            }
+            return false
+        }
+
+        guard !currentPassword.isEmpty else {
+            await MainActor.run {
+                changePasswordError = "Enter your current password."
+                isChangingPassword = false
+            }
+            return false
+        }
+
+        guard trimmedNew.count >= 8 else {
+            await MainActor.run {
+                changePasswordError = "New password must be at least 8 characters."
+                isChangingPassword = false
+            }
+            return false
+        }
+
+        guard trimmedNew == trimmedConfirm else {
+            await MainActor.run {
+                changePasswordError = "New passwords don’t match."
+                isChangingPassword = false
+            }
+            return false
+        }
+
+        guard trimmedNew != currentPassword else {
+            await MainActor.run {
+                changePasswordError = "New password must be different from your current password."
+                isChangingPassword = false
+            }
+            return false
+        }
+
+        guard let user = Auth.auth().currentUser,
+              let emailAddress = user.email, !emailAddress.isEmpty else {
+            await MainActor.run {
+                changePasswordError = "Could not read your account email."
+                isChangingPassword = false
+            }
+            return false
+        }
+
+        // Authenticates with current password to verify, then updates to new password.
+        do {
+            let credential = EmailAuthProvider.credential(withEmail: emailAddress, password: currentPassword)
+            try await user.reauthenticate(with: credential)
+            try await user.updatePassword(to: trimmedNew)
+            await MainActor.run { isChangingPassword = false }
+            return true
+        } catch {
+            let mapped = FirebaseAuthErrorMapping.mapChangePassword(error)
+            let message: String
+            switch mapped {
+            case .currentPassword(let msg), .newPassword(let msg), .general(let msg):
+                message = msg
+            }
+            await MainActor.run {
+                changePasswordError = message
+                isChangingPassword = false
+            }
+            return false
         }
     }
 

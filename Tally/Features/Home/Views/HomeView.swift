@@ -9,6 +9,8 @@ import SwiftUI
 
 struct HomeView: View {
 
+    var onLogout: () -> Void = {}
+
     @StateObject private var homeViewModel = HomeViewModel()
     @State private var selectedTab: Int = 0
     @State private var showAddTransaction: Bool = false
@@ -22,7 +24,7 @@ struct HomeView: View {
                     .tag(1)
                 InsightsView()
                     .tag(2)
-                ProfileView()
+                ProfileView(onLogout: onLogout)
                     .tag(3)
             }
 

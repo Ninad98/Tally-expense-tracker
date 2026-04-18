@@ -11,6 +11,8 @@ import SwiftUI
 
 struct ProfileView: View {
 
+    var onLogout: () -> Void = {}
+
     // To keep track of the action for the settings rows.
     private enum SettingAction {
         case chevron
@@ -26,6 +28,9 @@ struct ProfileView: View {
 
     // To keep track if notifications are enabled or not.
     @State private var notificationsEnabled = true
+    @State private var logoutError: String?
+    @State private var showLogoutDialog = false
+    @State private var showChangePassword = false
 
     var body: some View {
         ZStack {
@@ -83,6 +88,35 @@ struct ProfileView: View {
             Button("OK", role: .cancel) { viewModel.errorMessage = nil }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+        .alert("Log out failed", isPresented: Binding(
+            get: { logoutError != nil },
+            set: { if !$0 { logoutError = nil } }
+        )) {
+            Button("OK", role: .cancel) { logoutError = nil }
+        } message: {
+            Text(logoutError ?? "")
+        }
+        .sheet(isPresented: $showLogoutDialog) {
+            LogoutConfirmationSheet(onConfirm: performLogout)
+                .presentationDetents([.height(400)])
+                .presentationDragIndicator(.hidden)
+                .presentationBackground(Color.pageBG)
+        }
+        .sheet(isPresented: $showChangePassword) {
+            ChangePasswordSheet(viewModel: viewModel)
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color.pageBG)
+        }
+    }
+
+    private func performLogout() {
+        do {
+            try Authentication().logout()
+            biometricManager.isLocked = false
+            onLogout()
+        } catch {
+            logoutError = error.localizedDescription
         }
     }
 
@@ -190,14 +224,33 @@ struct ProfileView: View {
     private var securitySection: some View {
         settingsGroup(title: "SECURITY") {
             VStack(spacing: 0) {
-                settingsRow(
-                    icon: "lock.fill",
-                    iconBG: Color.heading.opacity(0.08),
-                    iconColor: Color.heading,
-                    title: "Change Password",
-                    subtitle: nil,
-                    trailing: .chevron
-                )
+                Group {
+                    if viewModel.isEmailProvider {
+                        Button {
+                            showChangePassword = true
+                        } label: {
+                            settingsRow(
+                                icon: "lock.fill",
+                                iconBG: Color.heading.opacity(0.08),
+                                iconColor: Color.heading,
+                                title: "Change Password",
+                                subtitle: nil,
+                                trailing: .chevron
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        settingsRow(
+                            icon: "lock.fill",
+                            iconBG: Color.heading.opacity(0.08),
+                            iconColor: Color.heading,
+                            title: "Change Password",
+                            subtitle: viewModel.passwordChangeUnavailable,
+                            trailing: .none,
+                            readOnly: true
+                        )
+                    }
+                }
 
                 Divider()
                     .padding(.leading, 56)
@@ -246,7 +299,7 @@ struct ProfileView: View {
 
     private var logOutButton: some View {
         Button {
-            // TODO: Logout user and navigate back to login screen.
+            showLogoutDialog = true
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "rectangle.portrait.and.arrow.right")
@@ -262,9 +315,8 @@ struct ProfileView: View {
         }
     }
 
-    // TODO: I would want to have the version pushed to firestore and fetch it from there.
     private var versionLabel: some View {
-        Text("Version 2.4.0 · Build 1024")
+        Text("Version \(Bundle.main.appVersion) · Build \(Bundle.main.appBuild)")
             .font(.manrope(.regular, size: 12))
             .foregroundStyle(Color.mutedText)
     }
@@ -340,6 +392,69 @@ struct ProfileView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
         .opacity(readOnly ? 0.72 : 1)
+    }
+}
+
+private struct LogoutConfirmationSheet: View {
+
+    @Environment(\.dismiss) private var dismiss
+    let onConfirm: () -> Void
+
+    var body: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(Color.errorRose.opacity(0.15))
+                    .frame(width: 76, height: 76)
+                Image(systemName: "rectangle.portrait.and.arrow.right")
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundStyle(Color.errorRose)
+            }
+
+            Text("Logout?")
+                .font(.urbanist(.bold, size: 22))
+                .foregroundStyle(Color.heading)
+
+            Text("Are you sure you want to log out of your account?")
+                .font(.manrope(.regular, size: 14))
+                .foregroundStyle(Color.mutedText)
+                .multilineTextAlignment(.center)
+
+            VStack(spacing: 12) {
+                Button {
+                    onConfirm()
+                    dismiss()
+                } label: {
+                    Text("Logout")
+                        .font(.manrope(.bold, size: 16))
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.errorRose)
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    dismiss()
+                } label: {
+                    Text("Cancel")
+                        .font(.manrope(.bold, size: 16))
+                        .foregroundStyle(Color.errorRose)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(Color.errorRose.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 24))
+        .padding(.horizontal, 20)
+        .padding(.bottom, 12)
     }
 }
 
