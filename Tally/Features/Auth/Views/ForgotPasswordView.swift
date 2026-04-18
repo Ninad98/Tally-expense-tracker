@@ -11,40 +11,33 @@ struct ForgotPasswordView: View {
 
     let onBackToLogin: () -> Void
 
-    @State private var email: String = ""
-    @State private var didSendLink: Bool = false
+    @StateObject private var viewModel = ForgotPasswordViewModel()
 
     var body: some View {
         ZStack {
             Color.pageBG.ignoresSafeArea()
 
-            if didSendLink {
+            if viewModel.showCheckEmail {
                 CheckYourEmailScreen(
-                    email: email,
-                    onOpenEmailApp: {},
-                    onResend: {}
+                    email: viewModel.submittedEmail,
+                    onBackToLogin: onBackToLogin
                 )
             } else {
                 ForgotPasswordFormScreen(
-                    email: $email,
+                    viewModel: viewModel,
                     onBack: onBackToLogin,
-                    onSendResetLink: {
-                        withAnimation(.easeInOut(duration: 0.35)) {
-                            didSendLink = true
-                        }
-                    },
                     onLoginTap: onBackToLogin
                 )
             }
         }
+        .animation(.easeInOut(duration: 0.35), value: viewModel.showCheckEmail)
     }
 }
 
 private struct ForgotPasswordFormScreen: View {
 
-    @Binding var email: String
+    @ObservedObject var viewModel: ForgotPasswordViewModel
     let onBack: () -> Void
-    let onSendResetLink: () -> Void
     let onLoginTap: () -> Void
 
     var body: some View {
@@ -66,6 +59,14 @@ private struct ForgotPasswordFormScreen: View {
 
                     sendResetLinkButton
                         .padding(.top, 24)
+
+                    if let err = viewModel.errorMessage {
+                        Label(err, systemImage: "exclamationmark.circle")
+                            .font(.manrope(.regular, size: 14))
+                            .foregroundStyle(Color.errorRose)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 16)
+                    }
                 }
                 .padding(.horizontal, 16)
             }
@@ -129,7 +130,7 @@ private struct ForgotPasswordFormScreen: View {
 
                 TextField(
                     "",
-                    text: $email,
+                    text: $viewModel.email,
                     prompt: Text("name@example.com").foregroundStyle(Color.mutedText)
                 )
                 .keyboardType(.emailAddress)
@@ -137,6 +138,9 @@ private struct ForgotPasswordFormScreen: View {
                 .autocorrectionDisabled()
                 .font(.manrope(.regular, size: 16))
                 .foregroundStyle(Color.heading)
+                .onChange(of: viewModel.email) { _, _ in
+                    viewModel.errorMessage = nil
+                }
             }
             .padding(.horizontal, 16)
             .frame(height: 56)
@@ -150,23 +154,38 @@ private struct ForgotPasswordFormScreen: View {
     }
 
     private var sendResetLinkButton: some View {
-        Button(action: onSendResetLink) {
-            HStack(spacing: 10) {
-                Text("Send Reset Link")
-                    .font(.urbanist(.bold, size: 17))
-                    .foregroundStyle(.white)
+        Button {
+            viewModel.sendPasswordReset()
+        } label: {
+            ZStack {
+                if viewModel.isLoading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    HStack(spacing: 10) {
+                        Text("Send Reset Link")
+                            .font(.urbanist(.bold, size: 17))
+                            .foregroundStyle(.white)
 
-                Image(systemName: "paperplane.fill")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
+                        Image(systemName: "paperplane.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                    }
+                }
             }
             .frame(maxWidth: .infinity)
             .frame(height: 60)
             .background(Color.primaryBlue)
             .clipShape(RoundedRectangle(cornerRadius: 24))
         }
-        .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty)
-        .opacity(email.trimmingCharacters(in: .whitespaces).isEmpty ? 0.6 : 1)
+        .disabled(
+            viewModel.isLoading
+                || viewModel.email.trimmingCharacters(in: .whitespaces).isEmpty
+        )
+        .opacity(
+            viewModel.isLoading || viewModel.email.trimmingCharacters(in: .whitespaces).isEmpty
+                ? 0.6 : 1
+        )
     }
 
     private var footer: some View {
@@ -187,8 +206,7 @@ private struct ForgotPasswordFormScreen: View {
 private struct CheckYourEmailScreen: View {
 
     let email: String
-    let onOpenEmailApp: () -> Void
-    let onResend: () -> Void
+    let onBackToLogin: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
@@ -198,17 +216,27 @@ private struct CheckYourEmailScreen: View {
                 .padding(.top, 32)
                 .padding(.horizontal, 32)
 
-            openEmailAppButton
+            backToLoginButton
                 .padding(.top, 32)
                 .padding(.horizontal, 24)
-
-            resendRow
-                .padding(.top, 20)
 
             Spacer()
             brandFooter
                 .padding(.bottom, 32)
         }
+    }
+
+    private var backToLoginButton: some View {
+        Button(action: onBackToLogin) {
+            Text("Back to Login")
+                .font(.urbanist(.bold, size: 17))
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 60)
+                .background(Color.primaryBlue)
+                .clipShape(RoundedRectangle(cornerRadius: 24))
+        }
+        .buttonStyle(.plain)
     }
 
     private var envelopeBadge: some View {
@@ -251,43 +279,11 @@ private struct CheckYourEmailScreen: View {
                 .font(.manrope(.bold, size: 15))
                 .foregroundStyle(Color.primaryBlue)
 
-            Text("Please check your inbox and follow the instructions.")
+            Text("Check your inbox and follow the instructions.")
                 .font(.manrope(.medium, size: 15))
                 .foregroundStyle(Color.bodyText)
         }
         .frame(maxWidth: .infinity)
-    }
-
-    private var openEmailAppButton: some View {
-        Button(action: onOpenEmailApp) {
-            HStack(spacing: 10) {
-                Text("Open Email App")
-                    .font(.urbanist(.bold, size: 17))
-                    .foregroundStyle(.white)
-
-                Image(systemName: "arrow.up.right.square")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.white)
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 60)
-            .background(Color.primaryBlue)
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-        }
-    }
-
-    private var resendRow: some View {
-        VStack(spacing: 4) {
-            Text("Didn't receive the email?")
-                .font(.manrope(.regular, size: 14))
-                .foregroundStyle(Color.bodyText)
-
-            Button(action: onResend) {
-                Text("Resend Link")
-                    .font(.manrope(.bold, size: 14))
-                    .foregroundStyle(Color.primaryBlue)
-            }
-        }
     }
 
     private var brandFooter: some View {
