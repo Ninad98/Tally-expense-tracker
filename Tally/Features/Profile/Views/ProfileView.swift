@@ -290,9 +290,8 @@ struct ProfileView: View {
         }
     }
 
-    // TODO: I would want to have the version pushed to firestore and fetch it from there.
     private var versionLabel: some View {
-        Text("Version 2.4.0 · Build 1024")
+        Text("Version \(Bundle.main.appVersion) · Build \(Bundle.main.appBuild)")
             .font(.manrope(.regular, size: 12))
             .foregroundStyle(Color.mutedText)
     }
