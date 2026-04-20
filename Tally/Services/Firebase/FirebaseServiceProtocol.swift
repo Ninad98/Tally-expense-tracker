@@ -43,6 +43,19 @@ protocol FirebaseServiceProtocol {
         isRecurring: Bool
     ) async throws
 
+    func importPlaidTransaction(
+        uid: String,
+        plaidTransactionId: String,
+        title: String,
+        amount: Double,
+        categoryId: String,
+        categoryName: String,
+        categoryIcon: String,
+        type: TransactionType,
+        date: Date,
+        note: String
+    ) async throws
+
     func fetchRecentTransactions(uid: String, limit: Int) async -> [AppTransaction]
 
     func fetchMonthlyTransactions(uid: String) async -> [AppTransaction]
