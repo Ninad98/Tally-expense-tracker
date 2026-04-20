@@ -38,6 +38,8 @@ class SyncedTransactionDTO(BaseModel):
     date: str
     merchant_name: Optional[str] = None
     pending: bool = False
+    pfc_primary: Optional[str] = None
+    pfc_detailed: Optional[str] = None
 
 
 class SyncTransactionsResponseDTO(BaseModel):

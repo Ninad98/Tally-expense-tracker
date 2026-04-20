@@ -60,6 +60,8 @@ class PlaidService:
                 date=self._to_iso_date(t.date),
                 merchant_name=t.merchant_name,
                 pending=bool(t.pending),
+                pfc_primary=self._pfc_primary(t),
+                pfc_detailed=self._pfc_detailed(t),
             )
             for t in added
         ]
@@ -73,3 +75,13 @@ class PlaidService:
         if isinstance(value, date):
             return value.isoformat()
         return str(value)
+
+    @staticmethod
+    def _pfc_primary(transaction) -> str | None:
+        pfc = getattr(transaction, "personal_finance_category", None)
+        return getattr(pfc, "primary", None)
+
+    @staticmethod
+    def _pfc_detailed(transaction) -> str | None:
+        pfc = getattr(transaction, "personal_finance_category", None)
+        return getattr(pfc, "detailed", None)
