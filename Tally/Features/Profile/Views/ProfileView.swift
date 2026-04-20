@@ -30,6 +30,7 @@ struct ProfileView: View {
     @State private var logoutError: String?
     @State private var showLogoutDialog = false
     @State private var showChangePassword = false
+    @State private var showBankConnection = false
 
     var body: some View {
         ZStack {
@@ -108,6 +109,11 @@ struct ProfileView: View {
         }
         .sheet(isPresented: $showChangePassword) {
             ChangePasswordSheet(viewModel: viewModel)
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color.pageBG)
+        }
+        .sheet(isPresented: $showBankConnection) {
+            BankConnectionView()
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.pageBG)
         }
@@ -277,14 +283,19 @@ struct ProfileView: View {
 
     private var financialSection: some View {
         settingsGroup(title: "FINANCIAL") {
-            settingsRow(
-                icon: "creditcard.fill",
-                iconBG: Color.primaryBlue.opacity(0.1),
-                iconColor: Color.primaryBlue,
-                title: "Wallet Settings",
-                subtitle: "Default: Main Wallet",
-                trailing: .chevron
-            )
+            Button {
+                showBankConnection = true
+            } label: {
+                settingsRow(
+                    icon: "building.columns.fill",
+                    iconBG: Color.primaryBlue.opacity(0.1),
+                    iconColor: Color.primaryBlue,
+                    title: "Connect bank",
+                    subtitle: "Plaid",
+                    trailing: .chevron
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 
