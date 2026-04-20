@@ -5,6 +5,9 @@ from app.dto.plaid import (
     ExchangePublicTokenResponseDTO,
     LinkTokenCreateRequestDTO,
     LinkTokenCreateResponseDTO,
+    SyncedTransactionDTO,
+    SyncTransactionsRequestDTO,
+    SyncTransactionsResponseDTO,
 )
 
 __all__ = [
@@ -12,4 +15,7 @@ __all__ = [
     "ExchangePublicTokenResponseDTO",
     "LinkTokenCreateRequestDTO",
     "LinkTokenCreateResponseDTO",
+    "SyncedTransactionDTO",
+    "SyncTransactionsRequestDTO",
+    "SyncTransactionsResponseDTO",
 ]

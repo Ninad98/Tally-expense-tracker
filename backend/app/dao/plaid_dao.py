@@ -8,6 +8,7 @@ from plaid.model.item_public_token_exchange_request import ItemPublicTokenExchan
 from plaid.model.link_token_create_request import LinkTokenCreateRequest
 from plaid.model.link_token_create_request_user import LinkTokenCreateRequestUser
 from plaid.model.products import Products
+from plaid.model.transactions_sync_request import TransactionsSyncRequest
 
 from app.config import Settings
 
@@ -40,3 +41,10 @@ class PlaidDAO:
         request = ItemPublicTokenExchangeRequest(public_token=public_token)
         response = self._client.item_public_token_exchange(request)
         return response.access_token, response.item_id
+
+    def sync_transactions(self, *, access_token: str, cursor: str | None):
+        payload = {"access_token": access_token}
+        if cursor is not None:
+            payload["cursor"] = cursor
+        request = TransactionsSyncRequest(**payload)
+        return self._client.transactions_sync(request)

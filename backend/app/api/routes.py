@@ -6,6 +6,8 @@ from app.dto.plaid import (
     ExchangePublicTokenResponseDTO,
     LinkTokenCreateRequestDTO,
     LinkTokenCreateResponseDTO,
+    SyncTransactionsRequestDTO,
+    SyncTransactionsResponseDTO,
 )
 from app.services.plaid_service import PlaidService
 
@@ -30,5 +32,16 @@ def exchange_public_token(
 ) -> ExchangePublicTokenResponseDTO:
     try:
         return service.exchange_public_token(body)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=str(e)) from e
+
+
+@router.post("/sync_transactions", response_model=SyncTransactionsResponseDTO)
+def sync_transactions(
+    body: SyncTransactionsRequestDTO,
+    service: PlaidService = Depends(get_plaid_service),
+) -> SyncTransactionsResponseDTO:
+    try:
+        return service.sync_transactions(body)
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e)) from e
