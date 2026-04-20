@@ -64,11 +64,18 @@ final class FirebaseService: FirebaseServiceProtocol {
             let fullName = data["fullName"] as? String ?? ""
             let email = data["email"] as? String ?? ""
             let photo = (data["profilePhoto"] as? String) ?? (data["profilePhotoJPEGBase64"] as? String)
+            let plaidItemID = data["plaidItemID"] as? String
+            let rawInstitutionName = data["plaidInstitutionName"] as? String
+            let plaidInstitutionName = (rawInstitutionName?.isEmpty == true) ? nil : rawInstitutionName
+            let plaidLinkedAt = (data["plaidLinkedAt"] as? Timestamp)?.dateValue()
 
             return UserProfileSnapshot(
                 fullName: fullName,
                 email: email,
-                profilePhoto: photo
+                profilePhoto: photo,
+                plaidItemID: plaidItemID,
+                plaidInstitutionName: plaidInstitutionName,
+                plaidLinkedAt: plaidLinkedAt
             )
         } catch {
             print("fetchUserProfile error")
@@ -86,6 +93,19 @@ final class FirebaseService: FirebaseServiceProtocol {
         let db = Firestore.firestore()
         let ref = db.collection("users").document(uid)
         try await ref.setData(["fullName": fullName], merge: true)
+    }
+
+    func savePlaidLink(uid: String, itemID: String, institutionName: String?) async throws {
+        let db = Firestore.firestore()
+        let ref = db.collection("users").document(uid)
+
+        let data: [String: Any] = [
+            "plaidItemID": itemID,
+            "plaidLinkedAt": FieldValue.serverTimestamp(),
+            "plaidInstitutionName": institutionName ?? ""
+        ]
+
+        try await ref.setData(data, merge: true)
     }
 
     func fetchActiveBudget(uid: String) async -> Budget? {

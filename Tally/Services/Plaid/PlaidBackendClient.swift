@@ -50,7 +50,7 @@ final class PlaidBackendClient {
     }
 
     // Attribution: https://plaid.com/docs/link/ios/ and GenAI.
-    func exchangePublicToken(publicToken: String) async throws {
+    func exchangePublicToken(publicToken: String) async throws -> String {
         struct Request: Encodable {
             let publicToken: String
             enum CodingKeys: String, CodingKey { case publicToken = "public_token" }
@@ -69,7 +69,7 @@ final class PlaidBackendClient {
             body: Request(publicToken: publicToken),
             responseType: Response.self
         )
-        _ = response
+        return response.itemID
     }
 
     private func post<Req: Encodable, Res: Decodable>(

@@ -14,6 +14,7 @@ import UIKit
 struct BankConnectionView: View {
 
     @SwiftUI.Environment(\.dismiss) private var dismiss
+    @ObservedObject var profileViewModel: ProfileViewModel
     private let api = PlaidBackendClient()
     @State private var handler: Handler?
     @State private var busy = false
@@ -46,10 +47,6 @@ struct BankConnectionView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 24))
                 }
                 .disabled(busy)
-
-                Text("Connection is through Plaid.")
-                    .font(.manrope(.regular, size: 12))
-                    .foregroundStyle(Color.mutedText)
 
                 Spacer()
             }
@@ -94,7 +91,13 @@ struct BankConnectionView: View {
             }
 
             var configuration = LinkTokenConfiguration(token: token) { success in
-                Task { await exchangeAndFinish(publicToken: success.publicToken) }
+                let institutionName = success.metadata.institution.name
+                Task {
+                    await exchangeAndFinish(
+                        publicToken: success.publicToken,
+                        institutionName: institutionName
+                    )
+                }
             }
             configuration.onExit = { exit in
                 Task { @MainActor in handleExit(exit) }
@@ -115,19 +118,16 @@ struct BankConnectionView: View {
         }
     }
 
-    private func exchangeAndFinish(publicToken: String) async {
+    private func exchangeAndFinish(publicToken: String, institutionName: String?) async {
         busy = true
         defer { busy = false }
         do {
-            try await api.exchangePublicToken(publicToken: publicToken)
-            await MainActor.run {
-                handler = nil
-                dismiss()
-            }
+            let itemID = try await api.exchangePublicToken(publicToken: publicToken)
+            try await profileViewModel.saveLinkedBank(itemID: itemID, institutionName: institutionName)
+            handler = nil
+            dismiss()
         } catch {
-            await MainActor.run {
-                self.error = error.localizedDescription
-            }
+            self.error = error.localizedDescription
         }
     }
 
@@ -170,5 +170,5 @@ struct BankConnectionView: View {
 }
 
 #Preview {
-    BankConnectionView()
+    BankConnectionView(profileViewModel: ProfileViewModel())
 }

@@ -92,8 +92,10 @@ struct ProfileView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.pageBG)
         }
-        .sheet(isPresented: $showBankConnection) {
-            BankConnectionView()
+        .sheet(isPresented: $showBankConnection, onDismiss: {
+            viewModel.loadProfile()
+        }) {
+            BankConnectionView(profileViewModel: viewModel)
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.pageBG)
         }
@@ -292,10 +294,10 @@ struct ProfileView: View {
             } label: {
                 settingsRow(
                     icon: "building.columns.fill",
-                    iconBG: Color.primaryBlue.opacity(0.1),
-                    iconColor: Color.primaryBlue,
-                    title: "Connect bank",
-                    subtitle: "Plaid",
+                    iconBG: (viewModel.isBankConnected ? Color.green : Color.primaryBlue).opacity(0.12),
+                    iconColor: viewModel.isBankConnected ? Color.green : Color.primaryBlue,
+                    title: viewModel.isBankConnected ? "Bank connected" : "Connect bank",
+                    subtitle: viewModel.bankStatusSubtitle,
                     trailing: .chevron
                 )
             }
