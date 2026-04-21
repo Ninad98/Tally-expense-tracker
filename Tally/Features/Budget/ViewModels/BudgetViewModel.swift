@@ -86,6 +86,23 @@ final class BudgetViewModel: ObservableObject {
         return nextDates.min()
     }
 
+    /// Splits the current month's expenses into 4 weeks.
+    var weeklySpendingData: [WeeklySpending] {
+        let expenses = monthlyTransactions.filter { !$0.isIncome }
+        var weekTotals = [0.0, 0.0, 0.0, 0.0]
+
+        // Loops over transactions and adds the amount based on the week it corresponds to.
+        for tx in expenses {
+            let day = Calendar.current.component(.day, from: tx.date)
+            let index = min((day - 1) / 7, 3)
+            weekTotals[index] += tx.amount
+        }
+
+        return (0..<4).map { i in
+            WeeklySpending(week: "W\(i + 1)", amount: weekTotals[i])
+        }
+    }
+
     // To display the recurring expenses only in the recurring sheet.
     var recurringExpenseTransactions: [AppTransaction] {
         monthlyTransactions

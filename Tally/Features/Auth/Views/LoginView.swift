@@ -13,6 +13,7 @@ struct LoginView: View {
 
     let onLoginSuccess: () -> Void
     let onSignUp: () -> Void
+    let onForgotPassword: () -> Void
     @StateObject private var viewModel = LoginViewModel()
 
     var body: some View {
@@ -127,7 +128,7 @@ struct LoginView: View {
                     HStack {
                         Spacer()
                         Button("Forgot Password?") {
-                            // TODO: Navigate to forgot password
+                            onForgotPassword()
                         }
                         .font(.subheadline)
                         .foregroundColor(.blue)
@@ -197,5 +198,5 @@ struct LoginView: View {
 }
 
 #Preview {
-    LoginView(onLoginSuccess: {}, onSignUp: {})
+    LoginView(onLoginSuccess: {}, onSignUp: {}, onForgotPassword: {})
 }
