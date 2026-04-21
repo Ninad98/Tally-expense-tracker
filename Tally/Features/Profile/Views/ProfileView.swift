@@ -30,29 +30,10 @@ struct ProfileView: View {
     @State private var logoutError: String?
     @State private var showLogoutDialog = false
     @State private var showChangePassword = false
+    @State private var showBankConnection = false
 
     var body: some View {
-        ZStack {
-            Color.pageBG.ignoresSafeArea()
-
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 24) {
-                    Text("Profile")
-                        .font(.urbanist(.bold, size: 18))
-                        .foregroundStyle(Color.heading)
-                    avatarSection
-                    personalInfoSection
-                    securitySection
-                    financialSection
-                    appSettingsSection
-                    logOutButton
-                    versionLabel
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
-                .padding(.bottom, 100)
-            }
-        }
+        profileScrollStack
         .onAppear { viewModel.loadProfile() }
         // Sync the toggle state with whether a reminder is actually scheduled.
         .task {
@@ -84,7 +65,7 @@ struct ProfileView: View {
                 showEditFullName = false
             }
         }
-        .alert("Error", isPresented: Binding(
+        .alert("Error", isPresented: Binding<Bool>(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.errorMessage = nil } }
         )) {
@@ -92,7 +73,7 @@ struct ProfileView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .alert("Log out failed", isPresented: Binding(
+        .alert("Log out failed", isPresented: Binding<Bool>(
             get: { logoutError != nil },
             set: { if !$0 { logoutError = nil } }
         )) {
@@ -110,6 +91,37 @@ struct ProfileView: View {
             ChangePasswordSheet(viewModel: viewModel)
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.pageBG)
+        }
+        .sheet(isPresented: $showBankConnection, onDismiss: {
+            viewModel.loadProfile()
+        }) {
+            BankConnectionView(profileViewModel: viewModel)
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Color.pageBG)
+        }
+    }
+
+    private var profileScrollStack: some View {
+        ZStack {
+            Color.pageBG.ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 24) {
+                    Text("Profile")
+                        .font(.urbanist(.bold, size: 18))
+                        .foregroundStyle(Color.heading)
+                    avatarSection
+                    personalInfoSection
+                    securitySection
+                    financialSection
+                    appSettingsSection
+                    logOutButton
+                    versionLabel
+                }
+                .padding(.horizontal, 24)
+                .padding(.top, 8)
+                .padding(.bottom, 100)
+            }
         }
     }
 
@@ -277,14 +289,19 @@ struct ProfileView: View {
 
     private var financialSection: some View {
         settingsGroup(title: "FINANCIAL") {
-            settingsRow(
-                icon: "creditcard.fill",
-                iconBG: Color.primaryBlue.opacity(0.1),
-                iconColor: Color.primaryBlue,
-                title: "Wallet Settings",
-                subtitle: "Default: Main Wallet",
-                trailing: .chevron
-            )
+            Button {
+                showBankConnection = true
+            } label: {
+                settingsRow(
+                    icon: "building.columns.fill",
+                    iconBG: (viewModel.isBankConnected ? Color.green : Color.primaryBlue).opacity(0.12),
+                    iconColor: viewModel.isBankConnected ? Color.green : Color.primaryBlue,
+                    title: viewModel.isBankConnected ? "Bank connected" : "Connect bank",
+                    subtitle: viewModel.bankStatusSubtitle,
+                    trailing: .chevron
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 

@@ -13,6 +13,12 @@ import UIKit
 
 final class ProfileViewModel: ObservableObject {
 
+    private static let linkedDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
+
     private let firebaseService: FirebaseServiceProtocol
 
     init(firebaseService: FirebaseServiceProtocol = FirebaseService()) {
@@ -31,6 +37,32 @@ final class ProfileViewModel: ObservableObject {
     @Published var passwordChangeUnavailable: String?
     @Published var isChangingPassword = false
     @Published var changePasswordError: String?
+
+    // Plaid stuff.
+    @Published var plaidItemID: String?
+    @Published var plaidInstitutionName: String?
+    @Published var plaidLinkedAt: Date?
+    @Published var importedPlaidTransactionCount: Int = 0
+
+    // Checks if bank is connected by checking the plaidItemId is set or not.
+    var isBankConnected: Bool {
+        guard let plaidItemID else {
+            return false 
+        }
+        return !plaidItemID.isEmpty
+    }
+
+    // Checks if bank is connected by checking isBankConnected variable if it is set, then we show connected subtitle.
+    var bankStatusSubtitle: String {
+        guard isBankConnected else {
+            return "Plaid" 
+        }
+        let institutionName = plaidInstitutionName ?? "Plaid"
+        if let linkedAt = plaidLinkedAt {
+            return "\(institutionName) - Connected - \(Self.linkedDateFormatter.string(from: linkedAt))"
+        }
+        return "\(institutionName) - Connected"
+    }
 
     func refreshAuthProviders() {
         guard let user = Auth.auth().currentUser else {
@@ -64,10 +96,16 @@ final class ProfileViewModel: ObservableObject {
                     let firestoreEmail = profile.email
                     email = firestoreEmail.isEmpty ? (Auth.auth().currentUser?.email ?? "") : firestoreEmail
                     avatarImage = ProfilePhotoEncoding.uiImage(fromBase64: profile.profilePhoto)
+                    plaidItemID = profile.plaidItemID
+                    plaidInstitutionName = profile.plaidInstitutionName
+                    plaidLinkedAt = profile.plaidLinkedAt
                 } else {
                     fullName = Auth.auth().currentUser?.displayName ?? ""
                     email = Auth.auth().currentUser?.email ?? ""
                     avatarImage = nil
+                    plaidItemID = nil
+                    plaidInstitutionName = nil
+                    plaidLinkedAt = nil
                 }
                 isLoading = false
                 refreshAuthProviders()
@@ -226,5 +264,113 @@ final class ProfileViewModel: ObservableObject {
                 isSavingPhoto = false
             }
         }
+    }
+
+    func saveLinkedBank(itemID: String, institutionName: String?) async throws {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            throw NSError(
+                domain: "ProfileViewModel",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Error saving bank."]
+            )
+        }
+        try await firebaseService.savePlaidLink(
+            uid: uid,
+            itemID: itemID,
+            institutionName: institutionName
+        )
+
+        await MainActor.run {
+            plaidItemID = itemID
+            plaidInstitutionName = institutionName
+            plaidLinkedAt = Date()
+        }
+    }
+
+    func savePlaidTransactions(_ transactions: [PlaidSyncedTransaction]) async throws {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            throw NSError(
+                domain: "ProfileViewModel",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Not signed in."]
+            )
+        }
+        guard !transactions.isEmpty else {
+            await MainActor.run { importedPlaidTransactionCount = 0 }
+            return
+        }
+
+        // Plaid returns date in yyyy-MM-dd format so we convert it to match our app's date format.
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        var imported = 0
+        for transaction in transactions {
+            let type: TransactionType = transaction.amount < 0 ? .income : .expense
+            let normalizedAmount = abs(transaction.amount)
+
+            let txDate = dateFormatter.date(from: transaction.date) ?? Date()
+            let mapped = Self.mapImportedCategory(
+                type: type,
+                pfcPrimary: transaction.pfcPrimary,
+                pfcDetailed: transaction.pfcDetailed
+            )
+            try await firebaseService.importPlaidTransaction(
+                uid: uid,
+                plaidTransactionId: transaction.transactionID,
+                title: transaction.name,
+                amount: normalizedAmount,
+                categoryId: mapped.id,
+                categoryName: mapped.name,
+                categoryIcon: mapped.icon,
+                type: type,
+                date: txDate,
+                note: "Imported via Plaid"
+            )
+            imported += 1
+        }
+
+        await MainActor.run {
+            importedPlaidTransactionCount = imported
+        }
+    }
+
+    // Maps Plaid PFC taxonomy into our existing Tally app categories.
+    private static func mapImportedCategory(
+        type: TransactionType,
+        pfcPrimary: String?,
+        pfcDetailed: String?
+    ) -> (id: String, name: String, icon: String) {
+
+        if type == .income {
+            return ("income", "Income", "arrow.down.left.circle.fill")
+        }
+
+        let primary = pfcPrimary ?? ""
+        let detailed = pfcDetailed ?? ""
+
+        if primary == "FOOD_AND_DRINK" {
+            return ("food", "Food & Dining", "fork.knife")
+        }
+        if primary == "ENTERTAINMENT" || primary == "TRAVEL" {
+            return ("entertainment", "Entertainment", "film")
+        }
+        if primary == "TRANSPORTATION" {
+            return ("transport", "Transport", "car")
+        }
+        if primary == "GENERAL_MERCHANDISE" {
+            return ("shopping", "Shopping", "bag")
+        }
+        if primary == "MEDICAL" || primary == "PERSONAL_CARE" {
+            return ("health", "Health & Fitness", "heart")
+        }
+        if primary == "RENT_AND_UTILITIES" {
+            if detailed == "RENT_AND_UTILITIES_RENT" {
+                return ("housing", "Housing", "house")
+            }
+            return ("bills", "Bills & Utilities", "bolt")
+        }
+
+        return ("plaid", "Plaid Imports", "link")
     }
 }
