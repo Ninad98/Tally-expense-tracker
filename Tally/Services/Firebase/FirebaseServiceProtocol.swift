@@ -50,4 +50,7 @@ protocol FirebaseServiceProtocol {
     func fetchAllTransactions(uid: String) async -> [AppTransaction]
     
     func deleteTransaction(uid: String, transactionId: String) async throws
+    
+    func fetchTransactions(uid: String, from startDate: Date, to endDate: Date) async -> [AppTransaction]
+    
 }
