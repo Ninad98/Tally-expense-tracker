@@ -5,7 +5,6 @@
 //  Created by Ninad Mankar on 4/21/26.
 //
 
-
 import Combine
 import SwiftUI
 
@@ -15,7 +14,6 @@ final class FinnyChatViewModel: ObservableObject {
     @Published var inputText: String = ""
     @Published var isLoading: Bool = false
 
-    // Financial context passed in from InsightsViewModel.
     private let totalSpent: Double
     private let totalIncome: Double
     private let budgetGoal: Double
@@ -23,9 +21,7 @@ final class FinnyChatViewModel: ObservableObject {
     private let period: String
     private let categoryBreakdowns: [CategoryInsight]
 
-    
-    // For production, this should be stored on a backend server, not in the app.
-    private let apiKey = "YOUR_ANTHROPIC_API_KEY"
+    private let apiKey = "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"
 
     init(
         totalSpent: Double,
@@ -42,14 +38,12 @@ final class FinnyChatViewModel: ObservableObject {
         self.period = period
         self.categoryBreakdowns = categoryBreakdowns
 
-        // Greeting message shown when chat opens.
         messages.append(ChatMessage(
             role: "assistant",
             content: "Hey! I'm Finny, your AI financial coach. I can see your \(period.lowercased()) spending data. Ask me anything about your budget!"
         ))
     }
 
-    // Builds the system prompt with the user's real financial data.
     private var systemPrompt: String {
         var categoryText = ""
         for cat in categoryBreakdowns {
@@ -110,10 +104,9 @@ final class FinnyChatViewModel: ObservableObject {
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
 
-        // Build conversation history excluding the greeting.
+        // Build conversation history — drop the opening greeting, keep everything else.
         let conversationMessages = messages
-            .filter { $0.role != "assistant" || messages.firstIndex(where: { $0.id == $0.id }) != 0 }
-            .dropFirst() // Drop the greeting
+            .dropFirst()
             .map { ["role": $0.role, "content": $0.content] }
 
         let body: [String: Any] = [
@@ -125,7 +118,14 @@ final class FinnyChatViewModel: ObservableObject {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, _) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await URLSession.shared.data(for: request)
+
+        // Log error response from API for easier debugging.
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            let errorBody = String(data: data, encoding: .utf8) ?? "Unknown error"
+            print("Anthropic API error \(httpResponse.statusCode): \(errorBody)")
+            throw URLError(.badServerResponse)
+        }
 
         guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
               let content = json["content"] as? [[String: Any]],
