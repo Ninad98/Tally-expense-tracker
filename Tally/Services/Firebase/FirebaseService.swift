@@ -136,6 +136,32 @@ final class FirebaseService: FirebaseServiceProtocol {
                     categories.append(category)
                 }
             }
+            
+            // Adds plaid category and income category if they do not exist yet.
+            if !categories.contains(where: { $0.id == "plaid" }) {
+                categories.append(
+                    CategoryLimit(
+                        id: "plaid",
+                        name: "Plaid Imports",
+                        description: "Imported transactions that did not match app categories",
+                        icon: "link",
+                        limit: 0,
+                        isCustom: false
+                    )
+                )
+            }
+            if !categories.contains(where: { $0.id == "income" }) {
+                categories.append(
+                    CategoryLimit(
+                        id: "income",
+                        name: "Income",
+                        description: "Salary, refunds, and other income",
+                        icon: "arrow.down.left.circle.fill",
+                        limit: 0,
+                        isCustom: false
+                    )
+                )
+            }
 
             return Budget(
                 id: doc.documentID,
@@ -234,6 +260,43 @@ final class FirebaseService: FirebaseServiceProtocol {
         let ref = db.collection("users").document(uid)
             .collection("transactions").document(transactionId)
         try await ref.updateData(["isRecurringPaused": paused])
+    }
+
+    func importPlaidTransaction(uid: String, plaidTransactionId: String,
+        title: String,
+        amount: Double,
+        categoryId: String,
+        categoryName: String,
+        categoryIcon: String,
+        type: TransactionType,
+        date: Date,
+        note: String
+    ) async throws {
+        let db = Firestore.firestore()
+        let collection = db.collection("users").document(uid).collection("transactions")
+        let existing = try await collection
+            .whereField("plaidTransactionId", isEqualTo: plaidTransactionId)
+            .limit(to: 1)
+            .getDocuments()
+
+        let ref = existing.documents.first?.reference ?? collection.document()
+        var data: [String: Any] = [
+            "plaidTransactionId": plaidTransactionId,
+            "title": title,
+            "amount": amount,
+            "categoryId": categoryId,
+            "categoryName": categoryName,
+            "categoryIcon": categoryIcon,
+            "type": type.rawValue,
+            "date": Timestamp(date: date),
+            "note": note,
+            "isRecurring": false,
+            "updatedAt": FieldValue.serverTimestamp()
+        ]
+        if existing.documents.isEmpty {
+            data["createdAt"] = FieldValue.serverTimestamp()
+        }
+        try await ref.setData(data, merge: true)
     }
 
     func fetchRecentTransactions(uid: String, limit: Int) async -> [AppTransaction] {

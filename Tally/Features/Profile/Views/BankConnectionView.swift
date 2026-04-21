@@ -122,8 +122,17 @@ struct BankConnectionView: View {
         busy = true
         defer { busy = false }
         do {
-            let itemID = try await api.exchangePublicToken(publicToken: publicToken)
+            guard let uid = Auth.auth().currentUser?.uid else {
+                error = "Not signed in."
+                return
+            }
+            let itemID = try await api.exchangePublicToken(
+                publicToken: publicToken,
+                clientUserId: uid
+            )
             try await profileViewModel.saveLinkedBank(itemID: itemID, institutionName: institutionName)
+            let synced = try await api.syncTransactions(clientUserId: uid)
+            try await profileViewModel.savePlaidTransactions(synced)
             handler = nil
             dismiss()
         } catch {

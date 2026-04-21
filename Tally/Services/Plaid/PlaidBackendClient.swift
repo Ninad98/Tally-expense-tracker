@@ -7,6 +7,28 @@
 
 import Foundation
 
+struct PlaidSyncedTransaction: Decodable {
+    let transactionID: String
+    let name: String
+    let amount: Double
+    let date: String
+    let merchantName: String?
+    let pending: Bool
+    let pfcPrimary: String?
+    let pfcDetailed: String?
+
+    enum CodingKeys: String, CodingKey {
+        case transactionID = "transaction_id"
+        case name
+        case amount
+        case date
+        case merchantName = "merchant_name"
+        case pending
+        case pfcPrimary = "pfc_primary"
+        case pfcDetailed = "pfc_detailed"
+    }
+}
+
 final class PlaidBackendClient {
 
     private struct ErrorBody: Decodable {
@@ -50,10 +72,14 @@ final class PlaidBackendClient {
     }
 
     // Attribution: https://plaid.com/docs/link/ios/ and GenAI.
-    func exchangePublicToken(publicToken: String) async throws -> String {
+    func exchangePublicToken(publicToken: String, clientUserId: String?) async throws -> String {
         struct Request: Encodable {
             let publicToken: String
-            enum CodingKeys: String, CodingKey { case publicToken = "public_token" }
+            let clientUserId: String?
+            enum CodingKeys: String, CodingKey {
+                case publicToken = "public_token"
+                case clientUserId = "client_user_id"
+            }
         }
         struct Response: Decodable {
             let accessToken: String
@@ -66,10 +92,33 @@ final class PlaidBackendClient {
         let url = Self.baseURL.appendingPathComponent("api/exchange_public_token")
         let response = try await post(
             url: url,
-            body: Request(publicToken: publicToken),
+            body: Request(publicToken: publicToken, clientUserId: clientUserId),
             responseType: Response.self
         )
         return response.itemID
+    }
+
+    // Attribution: GenAI helped me structure this to work but the idea is to call my backend's API.
+    func syncTransactions(clientUserId: String) async throws -> [PlaidSyncedTransaction] {
+        struct Request: Encodable {
+            let clientUserId: String
+            enum CodingKeys: String, CodingKey { case clientUserId = "client_user_id" }
+        }
+        struct Response: Decodable {
+            let transactions: [PlaidSyncedTransaction]
+            let importedCount: Int
+            enum CodingKeys: String, CodingKey {
+                case transactions
+                case importedCount = "imported_count"
+            }
+        }
+        let url = Self.baseURL.appendingPathComponent("api/sync_transactions")
+        let response = try await post(
+            url: url,
+            body: Request(clientUserId: clientUserId),
+            responseType: Response.self
+        )
+        return response.transactions
     }
 
     private func post<Req: Encodable, Res: Decodable>(

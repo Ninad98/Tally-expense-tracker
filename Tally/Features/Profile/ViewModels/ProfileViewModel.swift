@@ -42,6 +42,7 @@ final class ProfileViewModel: ObservableObject {
     @Published var plaidItemID: String?
     @Published var plaidInstitutionName: String?
     @Published var plaidLinkedAt: Date?
+    @Published var importedPlaidTransactionCount: Int = 0
 
     // Checks if bank is connected by checking the plaidItemId is set or not.
     var isBankConnected: Bool {
@@ -284,5 +285,92 @@ final class ProfileViewModel: ObservableObject {
             plaidInstitutionName = institutionName
             plaidLinkedAt = Date()
         }
+    }
+
+    func savePlaidTransactions(_ transactions: [PlaidSyncedTransaction]) async throws {
+        guard let uid = Auth.auth().currentUser?.uid else {
+            throw NSError(
+                domain: "ProfileViewModel",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: "Not signed in."]
+            )
+        }
+        guard !transactions.isEmpty else {
+            await MainActor.run { importedPlaidTransactionCount = 0 }
+            return
+        }
+
+        // Plaid returns date in yyyy-MM-dd format so we convert it to match our app's date format.
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+
+        var imported = 0
+        for transaction in transactions {
+            let type: TransactionType = transaction.amount < 0 ? .income : .expense
+            let normalizedAmount = abs(transaction.amount)
+
+            let txDate = dateFormatter.date(from: transaction.date) ?? Date()
+            let mapped = Self.mapImportedCategory(
+                type: type,
+                pfcPrimary: transaction.pfcPrimary,
+                pfcDetailed: transaction.pfcDetailed
+            )
+            try await firebaseService.importPlaidTransaction(
+                uid: uid,
+                plaidTransactionId: transaction.transactionID,
+                title: transaction.name,
+                amount: normalizedAmount,
+                categoryId: mapped.id,
+                categoryName: mapped.name,
+                categoryIcon: mapped.icon,
+                type: type,
+                date: txDate,
+                note: "Imported via Plaid"
+            )
+            imported += 1
+        }
+
+        await MainActor.run {
+            importedPlaidTransactionCount = imported
+        }
+    }
+
+    // Maps Plaid PFC taxonomy into our existing Tally app categories.
+    private static func mapImportedCategory(
+        type: TransactionType,
+        pfcPrimary: String?,
+        pfcDetailed: String?
+    ) -> (id: String, name: String, icon: String) {
+
+        if type == .income {
+            return ("income", "Income", "arrow.down.left.circle.fill")
+        }
+
+        let primary = pfcPrimary ?? ""
+        let detailed = pfcDetailed ?? ""
+
+        if primary == "FOOD_AND_DRINK" {
+            return ("food", "Food & Dining", "fork.knife")
+        }
+        if primary == "ENTERTAINMENT" || primary == "TRAVEL" {
+            return ("entertainment", "Entertainment", "film")
+        }
+        if primary == "TRANSPORTATION" {
+            return ("transport", "Transport", "car")
+        }
+        if primary == "GENERAL_MERCHANDISE" {
+            return ("shopping", "Shopping", "bag")
+        }
+        if primary == "MEDICAL" || primary == "PERSONAL_CARE" {
+            return ("health", "Health & Fitness", "heart")
+        }
+        if primary == "RENT_AND_UTILITIES" {
+            if detailed == "RENT_AND_UTILITIES_RENT" {
+                return ("housing", "Housing", "house")
+            }
+            return ("bills", "Bills & Utilities", "bolt")
+        }
+
+        return ("plaid", "Plaid Imports", "link")
     }
 }
