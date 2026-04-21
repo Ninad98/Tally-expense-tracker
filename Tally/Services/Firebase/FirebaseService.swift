@@ -307,4 +307,20 @@ final class FirebaseService: FirebaseServiceProtocol {
             .collection("transactions").document(transactionId)
             .delete()
     }
+    
+    func fetchTransactions(uid: String, from startDate: Date, to endDate: Date) async -> [AppTransaction] {
+        do {
+            let db = Firestore.firestore()
+            let snapshot = try await db.collection("users").document(uid)
+                .collection("transactions")
+                .whereField("date", isGreaterThanOrEqualTo: Timestamp(date: startDate))
+                .whereField("date", isLessThan: Timestamp(date: endDate))
+                .order(by: "date", descending: true)
+                .getDocuments()
+            return snapshot.documents.compactMap { mapTransaction($0) }
+        } catch {
+            print("Error fetching transactions for period: \(error.localizedDescription)")
+            return []
+        }
+    }
 }
