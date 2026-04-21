@@ -12,6 +12,7 @@
 		36D88F982F6DB14100CBA752 /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 36D88F972F6DB14100CBA752 /* FirebaseDatabase */; };
 		36D88F9A2F6DB14500CBA752 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 36D88F992F6DB14500CBA752 /* FirebaseAuth */; };
 		36D88F9C2F6DB14900CBA752 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 36D88F9B2F6DB14900CBA752 /* FirebaseCore */; };
+		511772082F95A42500E59327 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = 511772072F95A42500E59327 /* LinkKit */; };
 		51A390882F78FEA500B76601 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 51A390872F78FEA500B76601 /* GoogleSignIn */; };
 		51A3908A2F78FEA500B76601 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 51A390892F78FEA500B76601 /* GoogleSignInSwift */; };
 /* End PBXBuildFile section */
@@ -51,6 +52,7 @@
 				51A3908A2F78FEA500B76601 /* GoogleSignInSwift in Frameworks */,
 				36D88F912F6DAF4000CBA752 /* FirebaseAnalytics in Frameworks */,
 				36D88F962F6DB13C00CBA752 /* FirebaseFirestore in Frameworks */,
+				511772082F95A42500E59327 /* LinkKit in Frameworks */,
 				36D88F9A2F6DB14500CBA752 /* FirebaseAuth in Frameworks */,
 				51A390882F78FEA500B76601 /* GoogleSignIn in Frameworks */,
 			);
@@ -110,6 +112,7 @@
 				36D88F9B2F6DB14900CBA752 /* FirebaseCore */,
 				51A390872F78FEA500B76601 /* GoogleSignIn */,
 				51A390892F78FEA500B76601 /* GoogleSignInSwift */,
+				511772072F95A42500E59327 /* LinkKit */,
 			);
 			productName = Tally;
 			productReference = 519913142F5CB24600532F8A /* Tally.app */;
@@ -142,6 +145,7 @@
 			packageReferences = (
 				36D88F8F2F6DAF4000CBA752 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				51A390862F78FEA500B76601 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
+				511772062F95A42500E59327 /* XCRemoteSwiftPackageReference "plaid-link-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 519913152F5CB24600532F8A /* Products */;
@@ -399,6 +403,14 @@
 				minimumVersion = 12.11.0;
 			};
 		};
+		511772062F95A42500E59327 /* XCRemoteSwiftPackageReference "plaid-link-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/plaid/plaid-link-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.4.7;
+			};
+		};
 		51A390862F78FEA500B76601 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
@@ -434,6 +446,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 36D88F8F2F6DAF4000CBA752 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseCore;
+		};
+		511772072F95A42500E59327 /* LinkKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 511772062F95A42500E59327 /* XCRemoteSwiftPackageReference "plaid-link-ios" */;
+			productName = LinkKit;
 		};
 		51A390872F78FEA500B76601 /* GoogleSignIn */ = {
 			isa = XCSwiftPackageProductDependency;

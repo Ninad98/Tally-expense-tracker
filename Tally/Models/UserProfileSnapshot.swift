@@ -12,4 +12,7 @@ struct UserProfileSnapshot: Sendable {
     var fullName: String
     var email: String
     var profilePhoto: String?
+    var plaidItemID: String?
+    var plaidInstitutionName: String?
+    var plaidLinkedAt: Date?
 }

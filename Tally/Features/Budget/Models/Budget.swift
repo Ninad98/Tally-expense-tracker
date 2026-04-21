@@ -16,13 +16,15 @@ struct CategoryLimit: Identifiable {
     var isCustom: Bool = false // I added this to differentiate between user custom categories and the default one.
 
     static let defaults: [CategoryLimit] = [
+        CategoryLimit(id: "income", name: "Income", description: "Salary, refunds, and other income", icon: "arrow.down.left.circle.fill", limit: 0),
         CategoryLimit(id: "food", name: "Food & Dining", description: "Restaurants, groceries", icon: "fork.knife", limit: 0),
         CategoryLimit(id: "transport", name: "Transport", description: "Fuel, public transit, Uber", icon: "car", limit: 0),
         CategoryLimit(id: "shopping", name: "Shopping", description: "Clothing, electronics", icon: "bag", limit: 0),
         CategoryLimit(id: "entertainment", name: "Entertainment", description: "Movies, games, events", icon: "film", limit: 0),
         CategoryLimit(id: "bills", name: "Bills & Utilities", description: "Rent, electricity, internet", icon: "bolt", limit: 0),
         CategoryLimit(id: "health", name: "Health & Fitness", description: "Gym, medicine, pharmacy", icon: "heart", limit: 0),
-        CategoryLimit(id: "housing", name: "Housing", description: "Rent, mortgage, utilities", icon: "house", limit: 0)
+        CategoryLimit(id: "housing", name: "Housing", description: "Rent, mortgage, utilities", icon: "house", limit: 0),
+        CategoryLimit(id: "plaid", name: "Plaid Imports", description: "Imported transactions that did not match app categories", icon: "link", limit: 0)
     ]
 }
 
