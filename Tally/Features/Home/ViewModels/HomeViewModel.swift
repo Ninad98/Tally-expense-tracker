@@ -51,8 +51,9 @@ final class HomeViewModel: ObservableObject {
             async let recent = firebaseService.fetchRecentTransactions(uid: uid, limit: 5)
             async let monthly = firebaseService.fetchMonthlyTransactions(uid: uid)
             async let budget = firebaseService.fetchActiveBudget(uid: uid)
+            async let previousMonth = Self.fetchPreviousMonthTransactions(uid: uid, service: firebaseService)
 
-            let (fetchedName, recentTx, monthlyTx, fetchedBudget) = await (name, recent, monthly, budget)
+            let (fetchedName, recentTx, monthlyTx, fetchedBudget, previousMonthTx) = await (name, recent, monthly, budget, previousMonth)
 
             await MainActor.run {
                 fullName = fetchedName ?? ""
@@ -67,6 +68,21 @@ final class HomeViewModel: ObservableObject {
                     .reduce(0) { $0 + $1.amount }
 
                 totalBalance = monthlyIncome - monthlyExpenses
+
+                // Sum previous month's income and expenses
+                let previousIncome = previousMonthTx
+                    .filter { $0.isIncome }
+                    .reduce(0) { $0 + $1.amount }
+                let previousExpenses = previousMonthTx
+                    .filter { !$0.isIncome }
+                    .reduce(0) { $0 + $1.amount }
+                let previousBalance = previousIncome - previousExpenses
+
+                // Compare previous month's balance with the current month's balance
+                balanceChangePercent = Self.calculatePercentChange(
+                    current: totalBalance,
+                    previous: previousBalance
+                )
 
                 budgetGoal = fetchedBudget?.totalLimitBase ?? 0
                 budgetSpent = monthlyExpenses
@@ -99,5 +115,26 @@ final class HomeViewModel: ObservableObject {
                 print("Failed to delete transaction: \(error.localizedDescription)")
             }
         }
+    }
+
+    private static func fetchPreviousMonthTransactions(
+        uid: String,
+        service: FirebaseServiceProtocol
+    ) async -> [AppTransaction] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let currentMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)),
+              let previousMonthStart = calendar.date(byAdding: .month, value: -1, to: currentMonthStart) else {
+            return []
+        }
+        return await service.fetchTransactions(uid: uid, from: previousMonthStart, to: currentMonthStart)
+    }
+
+    private static func calculatePercentChange(current: Double, previous: Double) -> Double {
+        guard previous != 0 else {
+            if current == 0 { return 0 }
+            return current > 0 ? 100 : -100
+        }
+        return ((current - previous) / abs(previous)) * 100
     }
 }
