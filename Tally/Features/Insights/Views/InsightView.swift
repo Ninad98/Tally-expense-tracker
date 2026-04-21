@@ -11,9 +11,10 @@ import SwiftUI
 struct InsightsView: View {
 
     @StateObject private var viewModel = InsightsViewModel()
+    @State private var showFinnyChat: Bool = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             Color.pageBG.ignoresSafeArea()
 
             if viewModel.isLoading {
@@ -21,12 +22,30 @@ struct InsightsView: View {
             } else {
                 mainContent
             }
+
+            // Floating Finny button pinned above the tab bar.
+            finnyButton
+                .padding(.bottom, 16)
         }
         .onAppear { viewModel.loadData() }
         .onChange(of: viewModel.selectedPeriod) { _, _ in
             viewModel.loadData()
         }
+        .sheet(isPresented: $showFinnyChat) {
+            FinnyChatView(viewModel: FinnyChatViewModel(
+                totalSpent: viewModel.totalSpent,
+                totalIncome: viewModel.totalIncome,
+                budgetGoal: viewModel.budgetGoal,
+                budgetRemaining: viewModel.budgetRemaining,
+                period: viewModel.selectedPeriod.rawValue,
+                categoryBreakdowns: viewModel.categoryBreakdowns
+            ))
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(Color.pageBG)
+        }
     }
+
 
     private var loadingState: some View {
         VStack(spacing: 16) {
@@ -38,8 +57,7 @@ struct InsightsView: View {
         }
     }
 
-    // MARK: - Main Content
-
+    
     private var mainContent: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 24) {
@@ -50,9 +68,52 @@ struct InsightsView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
-            .padding(.bottom, 100)
+            // Extra bottom padding so content doesn't hide behind Finny button.
+            .padding(.bottom, 120)
         }
     }
+
+
+    private var finnyButton: some View {
+        Button {
+            showFinnyChat = true
+        } label: {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(Color.primaryBlue)
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Finny - AI Coach")
+                        .font(.manrope(.bold, size: 14))
+                        .foregroundStyle(Color.heading)
+                    Text("READY TO CHAT")
+                        .font(.manrope(.bold, size: 11))
+                        .foregroundStyle(Color.primaryBlue)
+                        .tracking(0.5)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Color.mutedText)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .shadow(color: Color.black.opacity(0.1), radius: 16, x: 0, y: 4)
+            .padding(.horizontal, 20)
+        }
+        .buttonStyle(.plain)
+    }
+
 
     private var headerRow: some View {
         Text("Spending Insights")
@@ -60,8 +121,8 @@ struct InsightsView: View {
             .foregroundStyle(Color.heading)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
-    
+
+
     // Segmented control for Week / Month / Year.
     private var periodToggle: some View {
         HStack(spacing: 0) {
@@ -94,6 +155,7 @@ struct InsightsView: View {
                 .stroke(Color.cardBorder, lineWidth: 1)
         )
     }
+
 
     // Ring chart with total spent and % change in the center.
     private var donutChartSection: some View {
@@ -145,6 +207,7 @@ struct InsightsView: View {
         }
         .padding(.vertical, 16)
     }
+
 
     private var categoryBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 12) {

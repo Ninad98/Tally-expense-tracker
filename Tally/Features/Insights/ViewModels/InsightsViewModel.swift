@@ -39,11 +39,14 @@ final class InsightsViewModel: ObservableObject {
     @Published var isLoading: Bool = true
     @Published var totalSpent: Double = 0
     @Published var totalIncome: Double = 0
-
-    // Positive = spending increased vs last period, negative = decreased.
     @Published var percentageChange: Double = 0
     @Published var categoryBreakdowns: [CategoryInsight] = []
 
+    // Used by FinnyChatViewModel to give the AI context about the user's budget.
+    @Published var budgetGoal: Double = 0
+    @Published var budgetRemaining: Double = 0
+
+    // Reloads data whenever the period changes.
     func loadData() {
         isLoading = true
         guard let uid = Auth.auth().currentUser?.uid else {
@@ -55,11 +58,12 @@ final class InsightsViewModel: ObservableObject {
         let (prevStart, prevEnd) = dateRange(for: selectedPeriod, offset: -1)
 
         Task {
-            // Fetch current and previous period simultaneously.
+            // Fetch current period, previous period, and budget simultaneously.
             async let current = firebaseService.fetchTransactions(uid: uid, from: currentStart, to: currentEnd)
             async let previous = firebaseService.fetchTransactions(uid: uid, from: prevStart, to: prevEnd)
+            async let budget = firebaseService.fetchActiveBudget(uid: uid)
 
-            let (currentTx, previousTx) = await (current, previous)
+            let (currentTx, previousTx, fetchedBudget) = await (current, previous, budget)
 
             await MainActor.run {
                 let currentExpenses = currentTx.filter { !$0.isIncome }
@@ -68,6 +72,11 @@ final class InsightsViewModel: ObservableObject {
                 totalSpent = currentExpenses.reduce(0) { $0 + $1.amount }
                 totalIncome = currentTx.filter { $0.isIncome }.reduce(0) { $0 + $1.amount }
 
+                // Budget context for Finny AI coach.
+                budgetGoal = fetchedBudget?.totalLimitBase ?? 0
+                budgetRemaining = max(budgetGoal - totalSpent, 0)
+
+                // Calculate % change vs previous period.
                 let prevTotal = prevExpenses.reduce(0) { $0 + $1.amount }
                 if prevTotal > 0 {
                     percentageChange = ((totalSpent - prevTotal) / prevTotal) * 100
