@@ -64,6 +64,5 @@ fastlane/test_output
 
 GoogleService-Info.plist
 
-backend/.env
 venv/
 __pycache__/
