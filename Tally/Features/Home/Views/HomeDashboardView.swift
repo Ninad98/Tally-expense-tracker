@@ -90,9 +90,10 @@ struct HomeDashboardView: View {
 
             Spacer()
 
-            // Code to do in future for notifications
             Button {
-                // TODO: Notifications
+                withAnimation(.easeInOut(duration: 0.35)) {
+                    selectedTab = 3
+                }
             } label: {
                 ZStack(alignment: .topTrailing) {
                     Image(systemName: "bell")
@@ -104,6 +105,8 @@ struct HomeDashboardView: View {
                         .offset(x: 2, y: -2)
                 }
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Notifications settings")
         }
     }
 

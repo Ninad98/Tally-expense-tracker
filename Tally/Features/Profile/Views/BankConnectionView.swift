@@ -13,11 +13,19 @@ import UIKit
 @MainActor
 struct BankConnectionView: View {
 
+    private enum PlaidLoadingBusyState {
+        case idle
+        case preparingLink
+        case importingTransactions
+    }
+
     @SwiftUI.Environment(\.dismiss) private var dismiss
     @ObservedObject var profileViewModel: ProfileViewModel
+    var onImportCompleted: (Int) -> Void = { _ in }
     private let api = PlaidBackendClient()
     @State private var handler: Handler?
     @State private var busy = false
+    @State private var loadingState: PlaidLoadingBusyState = .idle
     @State private var error: String?
 
     var body: some View {
@@ -33,8 +41,13 @@ struct BankConnectionView: View {
                     Task { await openPlaid() }
                 } label: {
                     ZStack {
-                        if busy {
-                            ProgressView().tint(.white)
+                        if busy && loadingState == .preparingLink {
+                            HStack(spacing: 8) {
+                                ProgressView().tint(.white)
+                                Text("Plaid is loading...")
+                                    .font(.urbanist(.bold, size: 17))
+                                    .foregroundStyle(.white)
+                            }
                         } else {
                             Text("Connect with Plaid")
                                 .font(.urbanist(.bold, size: 17))
@@ -64,6 +77,28 @@ struct BankConnectionView: View {
                         .foregroundStyle(Color.primaryBlue)
                 }
             }
+            .overlay {
+                if busy && loadingState == .importingTransactions {
+                    ZStack {
+                        Color.black.opacity(0.2).ignoresSafeArea()
+                        VStack(spacing: 10) {
+                            ProgressView()
+                                .tint(Color.primaryBlue)
+                                .scaleEffect(1.1)
+                            Text("Importing transactions from Plaid...")
+                                .font(.manrope(.bold, size: 15))
+                                .foregroundStyle(Color.heading)
+                            Text("This may take some time.")
+                                .font(.manrope(.regular, size: 13))
+                                .foregroundStyle(Color.mutedText)
+                        }
+                        .padding(.vertical, 20)
+                        .padding(.horizontal, 18)
+                        .background(Color.white)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    }
+                }
+            }
         }
         .alert("Error", isPresented: Binding<Bool>(
             get: { error != nil },
@@ -79,8 +114,14 @@ struct BankConnectionView: View {
     private func openPlaid() async {
         guard !busy else { return }
         busy = true
+        loadingState = .preparingLink
         error = nil
-        defer { busy = false }
+        defer {
+            if loadingState == .preparingLink {
+                busy = false
+                loadingState = .idle
+            }
+        }
 
         do {
             let token = try await api.createLinkToken(clientUserId: Auth.auth().currentUser?.uid)
@@ -120,7 +161,11 @@ struct BankConnectionView: View {
 
     private func exchangeAndFinish(publicToken: String, institutionName: String?) async {
         busy = true
-        defer { busy = false }
+        loadingState = .importingTransactions
+        defer {
+            busy = false
+            loadingState = .idle
+        }
         do {
             guard let uid = Auth.auth().currentUser?.uid else {
                 error = "Not signed in."
@@ -133,6 +178,7 @@ struct BankConnectionView: View {
             try await profileViewModel.saveLinkedBank(itemID: itemID, institutionName: institutionName)
             let synced = try await api.syncTransactions(clientUserId: uid)
             try await profileViewModel.savePlaidTransactions(synced)
+            onImportCompleted(profileViewModel.importedPlaidTransactionCount)
             handler = nil
             dismiss()
         } catch {
