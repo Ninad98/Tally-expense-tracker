@@ -35,24 +35,11 @@ struct AuthOrDivider: View {
 
 struct AuthSocialLoginBlock: View {
     var onGoogle: () -> Void = {}
-    var onApple: () -> Void = {}
 
     var body: some View {
         VStack(spacing: 0) {
             AuthOrDivider()
 
-            AuthSocialButtonsRow(onGoogle: onGoogle, onApple: onApple)
-                .padding(.top, 16)
-        }
-    }
-}
-
-struct AuthSocialButtonsRow: View {
-    var onGoogle: () -> Void = {}
-    var onApple: () -> Void = {}
-
-    var body: some View {
-        HStack(spacing: 16) {
             Button(action: onGoogle) {
                 HStack(spacing: 8) {
                     Image("Google")
@@ -72,26 +59,7 @@ struct AuthSocialButtonsRow: View {
                         .stroke(Color.cardBorder, lineWidth: 1)
                 )
             }
-
-            Button(action: onApple) {
-                HStack(spacing: 8) {
-                    Image("Apple")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 20, height: 20)
-                    Text("Apple")
-                        .font(.manrope(.medium, size: 14))
-                        .foregroundStyle(Color.heading)
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.cardBorder, lineWidth: 1)
-                )
-            }
+            .padding(.top, 16)
         }
     }
 }
