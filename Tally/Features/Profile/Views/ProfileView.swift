@@ -31,6 +31,7 @@ struct ProfileView: View {
     @State private var showLogoutDialog = false
     @State private var showChangePassword = false
     @State private var showBankConnection = false
+    @State private var plaidImportResultMessage: String?
 
     var body: some View {
         profileScrollStack
@@ -81,6 +82,14 @@ struct ProfileView: View {
         } message: {
             Text(logoutError ?? "")
         }
+        .alert("Plaid import complete", isPresented: Binding<Bool>(
+            get: { plaidImportResultMessage != nil },
+            set: { if !$0 { plaidImportResultMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { plaidImportResultMessage = nil }
+        } message: {
+            Text(plaidImportResultMessage ?? "")
+        }
         .sheet(isPresented: $showLogoutDialog) {
             LogoutConfirmationSheet(onConfirm: performLogout)
                 .presentationDetents([.height(400)])
@@ -95,7 +104,12 @@ struct ProfileView: View {
         .sheet(isPresented: $showBankConnection, onDismiss: {
             viewModel.loadProfile()
         }) {
-            BankConnectionView(profileViewModel: viewModel)
+            BankConnectionView(
+                profileViewModel: viewModel,
+                onImportCompleted: { importedCount in
+                    plaidImportResultMessage = "Imported \(importedCount) transactions from Plaid."
+                }
+            )
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Color.pageBG)
         }
