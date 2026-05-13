@@ -1,6 +1,15 @@
+import os
+import ssl
+import certifi
+
+# Fix SSL certificate verification for local development.
+# This ensures Python uses the correct certificates when calling Plaid's sandbox.
+os.environ['SSL_CERT_FILE'] = certifi.where()
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+ssl._create_default_https_context = ssl.create_default_context
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.api.routes import router as plaid_router
 
 
